@@ -24,17 +24,17 @@ public class UserController {
 
     // Login endpoint
     @PostMapping("/login")
-    public ResponseEntity<Map<String, String>> login(@RequestParam String email, @RequestParam String password) {
-        boolean isAuthenticated = userService.login(email, password);
+    public ResponseEntity<UserEntity> login(@RequestParam String email, @RequestParam String password) {
+        UserEntity user= userService.login(email, password);
         
-        Map<String, String> response = new HashMap<>();
+//        Map<String, String> response = new HashMap<>();
         
-        if (isAuthenticated) {
-            response.put("message", "Login successful!");
-            return ResponseEntity.ok(response);
+        if ( user != null ) {
+        	System.out.println(user.toString());
+        	return ResponseEntity.status(HttpStatus.OK).body(user);
+          
         } else {
-            response.put("message", "Invalid email or password.");
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(user);
         }
     }
 
@@ -67,6 +67,7 @@ public class UserController {
     	var friendList = userService.getAllFriendList(userId);
     	
     	GetFriendListDto gfl = new GetFriendListDto();
+    	
     	if(friendList == null) {
     		gfl.setMessage("User not Existed by Id = "+userId);
     		return ResponseEntity.status(400).body(gfl);

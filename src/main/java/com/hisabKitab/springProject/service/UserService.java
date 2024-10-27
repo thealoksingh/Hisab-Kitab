@@ -16,16 +16,15 @@ public class UserService {
     private UserRepository userRepository;
 
     // Method to log in user by checking email and password
-    public boolean login(String email, String password) {
-        // Retrieve the user from the database
-    	UserEntity user = userRepository.findByEmail(email);
+    public UserEntity login(String email, String password) {
+      UserEntity user = userRepository.findByEmail(email);
 
-        // Check if user exists and if the password matches
         if (user != null) {
-            // Here you would normally hash the password and compare
-            return user.getPassword().equals(password); // Simplified for demonstration
+             if(user.getPassword().equals(password)){
+            	 return user;
+             } 
         }
-        return false;
+        return null;
     }
 
     // Method to sign up a new user
@@ -37,9 +36,10 @@ public class UserService {
             return "User already exists with this email!";
         }
 
-        userRepository.save(new UserEntity(newUser.getFullName(),newUser.getEmail(),newUser.getPassword(),newUser.getContactNo()));
+        userRepository.save(new UserEntity(newUser.getFullName(),newUser.getEmail(),newUser.getPassword(),newUser.getRole(),newUser.getContactNo()));
         return "User registered successfully!";
     }
+    
 
 	public UserEntity checkUserExistByContactNumber(Long userId, String contactNo) {
 		UserEntity friend =  userRepository.findByContactNo(contactNo);
