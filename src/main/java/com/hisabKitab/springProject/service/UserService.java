@@ -42,7 +42,7 @@ public class UserService {
     }
 
 	public UserEntity checkUserExistByContactNumber(Long userId, String contactNo) {
-		var friend =  userRepository.findByContactNo(contactNo);
+		UserEntity friend =  userRepository.findByContactNo(contactNo);
 		
 		if (friend != null) {
 			var user = userRepository.findById(userId).get();
@@ -54,12 +54,13 @@ public class UserService {
 			
 		}
 		
-		return null;
+		return friend;  
 		
 	}
 
 	public Set<UserEntity> getAllFriendList(Long userId) {
 		var user = userRepository.findById(userId).orElse(null);
-		return user.getFriends();
+	
+		return (user != null) ? user.getFriends(): null;
 	}
 }
