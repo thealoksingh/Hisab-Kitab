@@ -6,6 +6,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -22,11 +23,16 @@ public class UserEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long userId;
+	
 	private String fullName;
+	
+	@Column(unique = true)
 	private String email;
 	private String password;
 	private String role;
+	@Column(unique = true)
 	private String contactNo;
+	
 
 	@ManyToMany
 	@JoinTable(name = "friendship", // Join table name

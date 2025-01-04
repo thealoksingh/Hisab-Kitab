@@ -25,6 +25,8 @@ public class UserController {
     // Login endpoint
     @PostMapping("/login")
     public ResponseEntity<UserEntity> login(@RequestParam String email, @RequestParam String password) {
+    	
+    	System.out.println("login api called");
         UserEntity user= userService.login(email, password);
         
 //        Map<String, String> response = new HashMap<>();
@@ -80,4 +82,6 @@ public class UserController {
     	gfl.setFriendList(friendList);
     	return ResponseEntity.ok(gfl);
     }
+    
+   
 }

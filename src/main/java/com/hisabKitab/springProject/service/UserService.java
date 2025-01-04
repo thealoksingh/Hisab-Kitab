@@ -1,9 +1,11 @@
 package com.hisabKitab.springProject.service;
 
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 
 import com.hisabKitab.springProject.dto.SignUpUserDto;
 import com.hisabKitab.springProject.entity.UserEntity;
@@ -62,5 +64,16 @@ public class UserService {
 		var user = userRepository.findById(userId).orElse(null);
 	
 		return (user != null) ? user.getFriends(): null;
+	}
+
+	public void deleteUserById(Long userId) {
+		
+		if (userRepository.existsById(userId)) {
+			 userRepository.deleteById(userId);
+		}
+	}
+	
+	public List<UserEntity> getAllUser(){
+		return userRepository.findAll();
 	}
 }
