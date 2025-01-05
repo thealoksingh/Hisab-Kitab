@@ -1,13 +1,15 @@
 package com.hisabKitab.springProject.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
+import com.hisabKitab.springProject.dto.GetFriendListDto;
 import com.hisabKitab.springProject.dto.SignUpUserDto;
+import com.hisabKitab.springProject.dto.UsersFriendEntityDto;
 import com.hisabKitab.springProject.entity.UserEntity;
 import com.hisabKitab.springProject.repository.UserRepository;
 
@@ -16,6 +18,9 @@ public class UserService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private BalanceService balanceService;
 
     // Method to log in user by checking email and password
     public UserEntity login(String email, String password) {
@@ -60,10 +65,10 @@ public class UserService {
 		
 	}
 
-	public Set<UserEntity> getAllFriendList(Long userId) {
+	public List<UserEntity> getAllFriendList(Long userId) {
 		var user = userRepository.findById(userId).orElse(null);
 	
-		return (user != null) ? user.getFriends(): null;
+		return (user != null) ? new ArrayList<>(user.getFriends()): null;
 	}
 
 	public void deleteUserById(Long userId) {
@@ -75,5 +80,18 @@ public class UserService {
 	
 	public List<UserEntity> getAllUser(){
 		return userRepository.findAll();
+	}
+
+	public GetFriendListDto getAllFriendListWithDetails(Long userId, List<UserEntity> friendList) {
+		List<UsersFriendEntityDto> userFriendEntityList = new ArrayList<>();
+		
+		for(UserEntity f: friendList) {
+			var friendClosingBalance = balanceService.getNetBalanceDetail(userId, f.getUserId());
+			var lastTransactionDate = balanceService.getLastTransactionDateDetail(userId, f.getUserId());
+			userFriendEntityList.add(new UsersFriendEntityDto(f,friendClosingBalance,lastTransactionDate));
+		}
+		
+		
+		return new GetFriendListDto(null,userFriendEntityList);
 	}
 }

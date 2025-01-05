@@ -13,10 +13,10 @@ public class Transaction {
     private Long transId;
 
     @Column(name = "from_user_id", nullable = false)
-    private String fromUserId;
+    private Long fromUserId;
 
     @Column(name = "to_user_id", nullable = false)
-    private String toUserId;
+    private Long toUserId;
 
     @Column(name = "amount", nullable = false)
     private Double amount;
@@ -26,8 +26,26 @@ public class Transaction {
 
     @Column(name = "description")
     private String description;
+    
+    
 
-    // Getters and Setters
+    public Transaction() {
+		
+	}
+
+    
+	public Transaction(Long transId, Long fromUserId, Long toUserId, Double amount, LocalDate transDate,
+			String description) {
+		this.transId = transId;
+		this.fromUserId = fromUserId;
+		this.toUserId = toUserId;
+		this.amount = amount;
+		this.transDate = transDate;
+		this.description = description;
+	}
+
+
+	// Getters and Setters
     public Long getTransId() {
         return transId;
     }
@@ -36,19 +54,19 @@ public class Transaction {
         this.transId = transId;
     }
 
-    public String getFromUserId() {
+    public Long getFromUserId() {
         return fromUserId;
     }
 
-    public void setFromUserId(String fromUserId) {
+    public void setFromUserId(Long fromUserId) {
         this.fromUserId = fromUserId;
     }
 
-    public String getToUserId() {
+    public Long getToUserId() {
         return toUserId;
     }
 
-    public void setToUserId(String toUserId) {
+    public void setToUserId(Long toUserId) {
         this.toUserId = toUserId;
     }
 

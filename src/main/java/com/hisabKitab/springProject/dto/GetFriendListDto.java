@@ -1,17 +1,17 @@
 package com.hisabKitab.springProject.dto;
 
+import java.util.List;
 import java.util.Set;
 
-import com.hisabKitab.springProject.entity.UserEntity;
 
 public class GetFriendListDto {
 	
 	private String message;
-	private Set<UserEntity> friendList;
+	private List<UsersFriendEntityDto> friendList;
 	public GetFriendListDto() {
-		// TODO Auto-generated constructor stub
+		// TODO Auto-generated constructor 
 	}
-	public GetFriendListDto(String message, Set<UserEntity> friendList) {
+	public GetFriendListDto(String message, List<UsersFriendEntityDto> friendList) {
 		this.message = message;
 		this.friendList = friendList;
 	}
@@ -21,10 +21,10 @@ public class GetFriendListDto {
 	public void setMessage(String message) {
 		this.message = message;
 	}
-	public Set<UserEntity> getFriendList() {
+	public List<UsersFriendEntityDto> getFriendList() {
 		return friendList;
 	}
-	public void setFriendList(Set<UserEntity> friendList) {
+	public void setFriendList(List<UsersFriendEntityDto> friendList) {
 		this.friendList = friendList;
 	}
 	@Override

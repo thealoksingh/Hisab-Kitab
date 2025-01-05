@@ -12,13 +12,27 @@ public class Balance {
     private Long id;
 
     @Column(name = "user_id", nullable = false)
-    private String userId;
+    private Long userId;
 
     @Column(name = "friend_id", nullable = false)
-    private String friendId;
+    private Long friendId;
 
-    @Column(name = "last_date")
-    private LocalDate lastDate;
+    @Column(name = "last_transaction_date")
+    private LocalDate lastTransactionDate;
+
+    @Column(name = "net_balance", nullable = false)
+    private double netBalance;
+
+    public Balance(Long id, Long userId, Long friendId, LocalDate lastTransactionDate, double netBalance) {
+        this.id = id;
+        this.userId = userId;
+        this.friendId = friendId;
+        this.lastTransactionDate = lastTransactionDate;
+        this.netBalance = netBalance;
+    }
+
+    public Balance() {
+    }
 
     // Getters and Setters
     public Long getId() {
@@ -29,28 +43,35 @@ public class Balance {
         this.id = id;
     }
 
-    public String getUserId() {
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(String userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 
-    public String getFriendId() {
+    public Long getFriendId() {
         return friendId;
     }
 
-    public void setFriendId(String friendId) {
+    public void setFriendId(Long friendId) {
         this.friendId = friendId;
     }
 
-    public LocalDate getLastDate() {
-        return lastDate;
+    public LocalDate getLastTransactionDate() {
+        return lastTransactionDate;
     }
 
-    public void setLastDate(LocalDate lastDate) {
-        this.lastDate = lastDate;
+    public void setLastTransactionDate(LocalDate lastTransactionDate) {
+        this.lastTransactionDate = lastTransactionDate;
+    }
+
+    public double getNetBalance() {
+        return netBalance;
+    }
+
+    public void setNetBalance(double netBalance) {
+        this.netBalance = netBalance;
     }
 }
-

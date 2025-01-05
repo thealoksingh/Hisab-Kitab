@@ -68,20 +68,24 @@ public class UserController {
     public ResponseEntity<GetFriendListDto> getAllFriends(@PathVariable("userId") Long userId){
     	var friendList = userService.getAllFriendList(userId);
     	
-    	GetFriendListDto gfl = new GetFriendListDto();
+    	var gfl = userService.getAllFriendListWithDetails(userId, friendList);
+    	
+//    	GetFriendListDto gfl = new GetFriendListDto();
     	
     	if(friendList == null) {
     		gfl.setMessage("User not Existed by Id = "+userId);
     		return ResponseEntity.status(400).body(gfl);
     	} else if(friendList.isEmpty()) {
     		gfl.setMessage("No friends are there in the List");
-    		gfl.setFriendList(friendList);
+//    		gfl.setFriendList(friendList);
     		return ResponseEntity.status(400).body(gfl);
     	}
     	gfl.setMessage("Friend List founded");
-    	gfl.setFriendList(friendList);
+//    	gfl.setFriendList(friendList);
     	return ResponseEntity.ok(gfl);
     }
+    
+    
     
    
 }
