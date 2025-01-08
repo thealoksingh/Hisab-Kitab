@@ -1,6 +1,11 @@
 package com.hisabKitab.springProject.service;
 
 import java.util.ArrayList;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.List;
 import java.util.Set;
 
@@ -68,7 +73,8 @@ public class UserService {
 	public List<UserEntity> getAllFriendList(Long userId) {
 		var user = userRepository.findById(userId).orElse(null);
 	
-		return (user != null) ? new ArrayList<>(user.getFriends()): null;
+//		return (user != null) ? new ArrayList<>(user.getFriends()): null;
+		return (user != null) ? user.getFriends(): null;
 	}
 
 	public void deleteUserById(Long userId) {
@@ -91,6 +97,20 @@ public class UserService {
 			userFriendEntityList.add(new UsersFriendEntityDto(f,friendClosingBalance,lastTransactionDate));
 		}
 		
+		userFriendEntityList.sort(
+			    Comparator.comparing(
+			        UsersFriendEntityDto::getLastTransactionDate, 
+			        Comparator.nullsLast(Comparator.reverseOrder())
+			    )
+			);
+
+//		userFriendEntityList.sort((a, b) -> {
+//            if (a.getLastTransactionDate() == null) return 1; // null dates go to the end
+//            if (b.getLastTransactionDate() == null) return -1; // null dates go to the end
+//            return b.getLastTransactionDate().compareTo(a.getLastTransactionDate()); // Descending order
+//        });
+		
+		System.out.println(userFriendEntityList);
 		
 		return new GetFriendListDto(null,userFriendEntityList);
 	}

@@ -1,7 +1,9 @@
 package com.hisabKitab.springProject.entity;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -40,7 +42,7 @@ public class UserEntity {
 			inverseJoinColumns = @JoinColumn(name = "friend_id") // Foreign key for the friend user
 	)
 	@JsonIgnore
-	private Set<UserEntity> friends = new LinkedHashSet<>(); // Set of friends
+	private List<UserEntity> friends = new ArrayList<>(); // Set of friends
 
 	// Constructors, Getters, Setters
 
@@ -82,11 +84,11 @@ public class UserEntity {
 		this.contactNo = contactNo;
 	}
 
-	public Set<UserEntity> getFriends() {
+	public List<UserEntity> getFriends() {
 		return friends;
 	}
 
-	public void setFriends(Set<UserEntity> friends) {
+	public void setFriends(List<UserEntity> friends) {
 		this.friends = friends;
 	}
 

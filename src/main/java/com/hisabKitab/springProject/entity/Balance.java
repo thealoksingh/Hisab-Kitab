@@ -1,7 +1,9 @@
 package com.hisabKitab.springProject.entity;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
 
 @Entity
 @Table(name = "balances")
@@ -18,12 +20,13 @@ public class Balance {
     private Long friendId;
 
     @Column(name = "last_transaction_date")
-    private LocalDate lastTransactionDate;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    private LocalDateTime lastTransactionDate;
 
     @Column(name = "net_balance", nullable = false)
     private double netBalance;
 
-    public Balance(Long id, Long userId, Long friendId, LocalDate lastTransactionDate, double netBalance) {
+    public Balance(Long id, Long userId, Long friendId, LocalDateTime lastTransactionDate, double netBalance) {
         this.id = id;
         this.userId = userId;
         this.friendId = friendId;
@@ -59,11 +62,11 @@ public class Balance {
         this.friendId = friendId;
     }
 
-    public LocalDate getLastTransactionDate() {
+    public LocalDateTime getLastTransactionDate() {
         return lastTransactionDate;
     }
 
-    public void setLastTransactionDate(LocalDate lastTransactionDate) {
+    public void setLastTransactionDate(LocalDateTime lastTransactionDate) {
         this.lastTransactionDate = lastTransactionDate;
     }
 

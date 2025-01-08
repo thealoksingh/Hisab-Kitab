@@ -1,6 +1,7 @@
 package com.hisabKitab.springProject.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import com.hisabKitab.springProject.entity.UserEntity;
 
@@ -10,12 +11,12 @@ public class UsersFriendEntityDto {
 	
 	private Double closingBalance;
 	
-	 private LocalDate lastTransactionDate;
+	 private LocalDateTime lastTransactionDate;
 
 	public UsersFriendEntityDto() {
 	}
 
-	public UsersFriendEntityDto(UserEntity userEntity, Double closingBalance, LocalDate lastTransactionDate) {
+	public UsersFriendEntityDto(UserEntity userEntity, Double closingBalance, LocalDateTime lastTransactionDate) {
 		this.userEntity = userEntity;
 		this.closingBalance = closingBalance;
 		this.lastTransactionDate = lastTransactionDate;
@@ -37,11 +38,11 @@ public class UsersFriendEntityDto {
 		this.closingBalance = closingBalance;
 	}
 
-	public LocalDate getLastTransactionDate() {
+	public LocalDateTime getLastTransactionDate() {
 		return lastTransactionDate;
 	}
 
-	public void setLastTransactionDate(LocalDate lastTransactionDate) {
+	public void setLastTransactionDate(LocalDateTime lastTransactionDate) {
 		this.lastTransactionDate = lastTransactionDate;
 	}
 

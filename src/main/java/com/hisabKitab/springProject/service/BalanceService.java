@@ -1,6 +1,7 @@
 package com.hisabKitab.springProject.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,20 +21,20 @@ public class BalanceService {
 	    var userLastClosingBalance = balanceRepository.findByUserIdAndFriendId(transaction.getFromUserId(), transaction.getToUserId());
 	    if (userLastClosingBalance != null) {
 	        userLastClosingBalance.setNetBalance(userLastClosingBalance.getNetBalance() + transaction.getAmount());
-	        userLastClosingBalance.setLastTransactionDate(LocalDate.now());
+	        userLastClosingBalance.setLastTransactionDate(LocalDateTime.now());
 	        balanceRepository.save(userLastClosingBalance); // Save the updated balance
 	    } else {
-	        balanceRepository.save(new Balance(null, transaction.getFromUserId(), transaction.getToUserId(), LocalDate.now(), transaction.getAmount()));
+	        balanceRepository.save(new Balance(null, transaction.getFromUserId(), transaction.getToUserId(), LocalDateTime.now(), transaction.getAmount()));
 	    }
 
 	    // Update the balance for the friend
 	    var friendLastClosingBalance = balanceRepository.findByFriendIdAndUserId(transaction.getFromUserId(), transaction.getToUserId());
 	    if (friendLastClosingBalance != null) {
 	        friendLastClosingBalance.setNetBalance(friendLastClosingBalance.getNetBalance() - transaction.getAmount());
-	        friendLastClosingBalance.setLastTransactionDate(LocalDate.now());
+	        friendLastClosingBalance.setLastTransactionDate(LocalDateTime.now());
 	        balanceRepository.save(friendLastClosingBalance); // Save the updated balance
 	    } else {
-	        balanceRepository.save(new Balance(null, transaction.getToUserId(), transaction.getFromUserId(), LocalDate.now(), -transaction.getAmount()));
+	        balanceRepository.save(new Balance(null, transaction.getToUserId(), transaction.getFromUserId(), LocalDateTime.now(), -transaction.getAmount()));
 	    }
 	    
 	   
@@ -45,7 +46,7 @@ public class BalanceService {
 		return isBalanceDetailExist ? balanceRepository.findByUserIdAndFriendId(userId,friendId).getNetBalance():0D;
 	}
 	
-	public LocalDate getLastTransactionDateDetail(Long userId, Long friendId) {
+	public LocalDateTime getLastTransactionDateDetail(Long userId, Long friendId) {
 		var isBalanceDetailExist = balanceRepository.existsByUserIdAndFriendId(userId,friendId);
 		
 		return isBalanceDetailExist ? balanceRepository.findByUserIdAndFriendId(userId,friendId).getLastTransactionDate():null;
