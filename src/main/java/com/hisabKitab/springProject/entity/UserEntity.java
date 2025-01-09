@@ -8,6 +8,7 @@ import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -16,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -44,6 +46,10 @@ public class UserEntity {
 	@JsonIgnore
 	private List<UserEntity> friends = new ArrayList<>(); // Set of friends
 
+	 @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	 @JsonIgnore
+	    private List<TransactionComment> comments;
+	
 	// Constructors, Getters, Setters
 
 	// Default constructor
@@ -134,6 +140,14 @@ public class UserEntity {
 
 	public void setRole(String role) {
 		this.role = role;
+	}
+
+	public List<TransactionComment> getComments() {
+		return comments;
+	}
+
+	public void setComments(List<TransactionComment> comments) {
+		this.comments = comments;
 	}
 
 	@Override

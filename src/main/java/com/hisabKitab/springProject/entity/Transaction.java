@@ -2,6 +2,9 @@ package com.hisabKitab.springProject.entity;
 
 import jakarta.persistence.*;
 import java.time.LocalDate;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
 @Table(name = "transactions")
@@ -27,7 +30,9 @@ public class Transaction {
     @Column(name = "description")
     private String description;
     
-    
+    @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<TransactionComment> comments;
 
     public Transaction() {
 		
@@ -93,4 +98,14 @@ public class Transaction {
     public void setDescription(String description) {
         this.description = description;
     }
+
+
+	public List<TransactionComment> getComments() {
+		return comments;
+	}
+
+
+	public void setComments(List<TransactionComment> comments) {
+		this.comments = comments;
+	}
 }
