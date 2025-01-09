@@ -18,6 +18,8 @@ import com.hisabKitab.springProject.dto.UsersFriendEntityDto;
 import com.hisabKitab.springProject.entity.UserEntity;
 import com.hisabKitab.springProject.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
+
 @Service
 public class UserService {
 
@@ -69,6 +71,21 @@ public class UserService {
 		return friend;  
 		
 	}
+	
+	    @Transactional
+	    public void removeFriend(Long userId, Long friendId) {
+	        UserEntity user = userRepository.findById(userId)
+	                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+	        UserEntity friend = userRepository.findById(friendId)
+	                .orElseThrow(() -> new RuntimeException("Friend not found with ID: " + friendId));
+
+	        user.removeFriend(friend); // Remove friend from user's friend list
+	        userRepository.save(user); // Persist changes
+
+	        // Optional: If you want to remove the bidirectional friendship completely
+	        friend.removeFriend(user);
+	        userRepository.save(friend);
+	    }
 
 	public List<UserEntity> getAllFriendList(Long userId) {
 		var user = userRepository.findById(userId).orElse(null);
