@@ -45,6 +45,7 @@ public class FriendTransactionController {
     
     @PutMapping("/updatefriendTransactions")
     public ResponseEntity<Transaction> updateTransaction(@RequestBody Transaction transaction){
+    	System.out.println("Updated tran = "+transaction.toString());
     	
     	Transaction updatedTransaction = transactionService.updateTransaction(transaction);
     	

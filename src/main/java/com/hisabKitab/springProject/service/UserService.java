@@ -131,4 +131,12 @@ public class UserService {
 		
 		return new GetFriendListDto(null,userFriendEntityList);
 	}
+
+	public UserEntity getUserById(Long friendId) {
+		var friend = userRepository.findById(friendId);
+		if(friend.isPresent()) {
+			return friend.get();
+		}
+		return null;
+	}
 }
