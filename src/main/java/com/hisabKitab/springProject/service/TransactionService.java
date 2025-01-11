@@ -31,6 +31,7 @@ public class TransactionService {
 		balanceService.saveBalanceDetails(transaction);
 
 		return savedTransaction;
+		
 	}
 
 	public Transaction updateTransaction(Transaction transaction) {
@@ -39,10 +40,10 @@ public class TransactionService {
 		if(oldTransaction.isPresent()) {
 			var netAmount = transaction.getAmount()-oldTransaction.get().getAmount();
 			if(oldTransaction.get().getFromUserId() != transaction.getFromUserId()) {
-				
-				balanceService.updateBalance(transaction.getToUserId(), transaction.getFromUserId(),  (2*netAmount));
+				netAmount =  transaction.getAmount()+oldTransaction.get().getAmount();
+				balanceService.updateBalance(transaction.getFromUserId(), transaction.getToUserId(),  (netAmount));
 			}else {
-				balanceService.updateBalance( transaction.getFromUserId(), transaction.getToUserId(),  netAmount);
+				balanceService.updateBalance(transaction.getFromUserId(), transaction.getToUserId(),  (netAmount));
 				
 			}
 		}

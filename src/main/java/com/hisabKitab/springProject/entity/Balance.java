@@ -77,4 +77,10 @@ public class Balance {
     public void setNetBalance(double netBalance) {
         this.netBalance = netBalance;
     }
+
+	@Override
+	public String toString() {
+		return "Balance [id=" + id + ", userId=" + userId + ", friendId=" + friendId + ", lastTransactionDate="
+				+ lastTransactionDate + ", netBalance=" + netBalance + "]";
+	}
 }
