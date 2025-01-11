@@ -1,6 +1,11 @@
 package com.hisabKitab.springProject.service;
 
 import java.util.ArrayList;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.List;
 import java.util.Set;
 
@@ -12,6 +17,8 @@ import com.hisabKitab.springProject.dto.SignUpUserDto;
 import com.hisabKitab.springProject.dto.UsersFriendEntityDto;
 import com.hisabKitab.springProject.entity.UserEntity;
 import com.hisabKitab.springProject.repository.UserRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class UserService {
@@ -64,11 +71,27 @@ public class UserService {
 		return friend;  
 		
 	}
+	
+	    @Transactional
+	    public void removeFriend(Long userId, Long friendId) {
+	        UserEntity user = userRepository.findById(userId)
+	                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+	        UserEntity friend = userRepository.findById(friendId)
+	                .orElseThrow(() -> new RuntimeException("Friend not found with ID: " + friendId));
+
+	        user.removeFriend(friend); // Remove friend from user's friend list
+	        userRepository.save(user); // Persist changes
+
+	        // Optional: If you want to remove the bidirectional friendship completely
+	        friend.removeFriend(user);
+	        userRepository.save(friend);
+	    }
 
 	public List<UserEntity> getAllFriendList(Long userId) {
 		var user = userRepository.findById(userId).orElse(null);
 	
-		return (user != null) ? new ArrayList<>(user.getFriends()): null;
+//		return (user != null) ? new ArrayList<>(user.getFriends()): null;
+		return (user != null) ? user.getFriends(): null;
 	}
 
 	public void deleteUserById(Long userId) {
@@ -91,7 +114,29 @@ public class UserService {
 			userFriendEntityList.add(new UsersFriendEntityDto(f,friendClosingBalance,lastTransactionDate));
 		}
 		
+		userFriendEntityList.sort(
+			    Comparator.comparing(
+			        UsersFriendEntityDto::getLastTransactionDate, 
+			        Comparator.nullsLast(Comparator.reverseOrder())
+			    )
+			);
+
+//		userFriendEntityList.sort((a, b) -> {
+//            if (a.getLastTransactionDate() == null) return 1; // null dates go to the end
+//            if (b.getLastTransactionDate() == null) return -1; // null dates go to the end
+//            return b.getLastTransactionDate().compareTo(a.getLastTransactionDate()); // Descending order
+//        });
+		
+		System.out.println(userFriendEntityList);
 		
 		return new GetFriendListDto(null,userFriendEntityList);
+	}
+
+	public UserEntity getUserById(Long friendId) {
+		var friend = userRepository.findById(friendId);
+		if(friend.isPresent()) {
+			return friend.get();
+		}
+		return null;
 	}
 }

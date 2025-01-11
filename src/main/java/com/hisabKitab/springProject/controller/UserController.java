@@ -64,6 +64,12 @@ public class UserController {
     	} return ResponseEntity.status(400).body("User not existed with the contact no = "+contactNo);  // If user not exists
     }
     
+    @DeleteMapping("/{userId}/friends/{friendId}")
+    public ResponseEntity<String> removeFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+        userService.removeFriend(userId, friendId);
+        return ResponseEntity.ok("Friend removed successfully.");
+    }
+    
     @GetMapping("/getAllFriendList/{userId}")
     public ResponseEntity<GetFriendListDto> getAllFriends(@PathVariable("userId") Long userId){
     	var friendList = userService.getAllFriendList(userId);

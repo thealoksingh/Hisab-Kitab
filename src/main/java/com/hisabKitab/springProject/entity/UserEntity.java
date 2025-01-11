@@ -1,11 +1,14 @@
 package com.hisabKitab.springProject.entity;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -14,6 +17,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
@@ -40,8 +44,12 @@ public class UserEntity {
 			inverseJoinColumns = @JoinColumn(name = "friend_id") // Foreign key for the friend user
 	)
 	@JsonIgnore
-	private Set<UserEntity> friends = new LinkedHashSet<>(); // Set of friends
+	private List<UserEntity> friends = new ArrayList<>(); // Set of friends
 
+	 @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+	 @JsonIgnore
+	    private List<TransactionComment> comments;
+	
 	// Constructors, Getters, Setters
 
 	// Default constructor
@@ -82,11 +90,11 @@ public class UserEntity {
 		this.contactNo = contactNo;
 	}
 
-	public Set<UserEntity> getFriends() {
+	public List<UserEntity> getFriends() {
 		return friends;
 	}
 
-	public void setFriends(Set<UserEntity> friends) {
+	public void setFriends(List<UserEntity> friends) {
 		this.friends = friends;
 	}
 
@@ -132,6 +140,14 @@ public class UserEntity {
 
 	public void setRole(String role) {
 		this.role = role;
+	}
+
+	public List<TransactionComment> getComments() {
+		return comments;
+	}
+
+	public void setComments(List<TransactionComment> comments) {
+		this.comments = comments;
 	}
 
 	@Override
