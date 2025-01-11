@@ -18,46 +18,47 @@ import com.hisabKitab.springProject.dto.UsersFriendEntityDto;
 import com.hisabKitab.springProject.entity.UserEntity;
 import com.hisabKitab.springProject.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 @Service
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
-    
-    @Autowired
-    private BalanceService balanceService;
+	@Autowired
+	private UserRepository userRepository;
 
-    // Method to log in user by checking email and password
-    public UserEntity login(String email, String password) {
-      UserEntity user = userRepository.findByEmail(email);
+	@Autowired
+	private BalanceService balanceService;
 
-        if (user != null) {
-             if(user.getPassword().equals(password)){
-            	 return user;
-             } 
-        }
-        return null;
-    }
+	// Method to log in user by checking email and password
+	public UserEntity login(String email, String password) {
+		UserEntity user = userRepository.findByEmail(email);
 
-    // Method to sign up a new user
-    public String signup(SignUpUserDto newUser) {
-       UserEntity existingUser = userRepository.findByEmail(newUser.getEmail());
-        
-        if (existingUser != null) {
-        
-            return "User already exists with this email!";
-        }
+		if (user != null) {
+			if (user.getPassword().equals(password)) {
+				return user;
+			}
+		}
+		return null;
+	}
 
-        userRepository.save(new UserEntity(newUser.getFullName(),newUser.getEmail(),newUser.getPassword(),newUser.getRole(),newUser.getContactNo()));
-        return "User registered successfully!";
-    }
-    
+	// Method to sign up a new user
+	public String signup(SignUpUserDto newUser) {
+		UserEntity existingUser = userRepository.findByEmail(newUser.getEmail());
+
+		if (existingUser != null) {
+
+			return "User already exists with this email!";
+		}
+
+		userRepository.save(new UserEntity(newUser.getFullName(), newUser.getEmail(), newUser.getPassword(),
+				newUser.getRole(), newUser.getContactNo()));
+		return "User registered successfully!";
+	}
 
 	public UserEntity checkUserExistByContactNumber(Long userId, String contactNo) {
-		UserEntity friend =  userRepository.findByContactNo(contactNo);
-		
+		UserEntity friend = userRepository.findByContactNo(contactNo);
+
 		if (friend != null) {
 			var user = userRepository.findById(userId).get();
 			user.getFriends().add(friend);
@@ -65,78 +66,96 @@ public class UserService {
 			userRepository.save(user);
 			userRepository.save(friend);
 			return friend;
-			
+
 		}
-		
-		return friend;  
-		
+
+		return friend;
+
 	}
-	
-	    @Transactional
-	    public void removeFriend(Long userId, Long friendId) {
-	        UserEntity user = userRepository.findById(userId)
-	                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
-	        UserEntity friend = userRepository.findById(friendId)
-	                .orElseThrow(() -> new RuntimeException("Friend not found with ID: " + friendId));
 
-	        user.removeFriend(friend); // Remove friend from user's friend list
-	        userRepository.save(user); // Persist changes
+	public UserEntity addFriend(UserEntity user, UserEntity friend) {
 
-	        // Optional: If you want to remove the bidirectional friendship completely
-	        friend.removeFriend(user);
-	        userRepository.save(friend);
-	    }
+		
+		friend.getFriends().add(user);
+		userRepository.save(user);
+		userRepository.save(friend);
+		return friend;
+
+	}
+
+	@Transactional
+	public void removeFriend(Long userId, Long friendId) {
+		UserEntity user = userRepository.findById(userId)
+				.orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+		UserEntity friend = userRepository.findById(friendId)
+				.orElseThrow(() -> new RuntimeException("Friend not found with ID: " + friendId));
+
+		user.removeFriend(friend); // Remove friend from user's friend list
+		userRepository.save(user); // Persist changes
+
+		// Optional: If you want to remove the bidirectional friendship completely
+		friend.removeFriend(user);
+		userRepository.save(friend);
+	}
 
 	public List<UserEntity> getAllFriendList(Long userId) {
 		var user = userRepository.findById(userId).orElse(null);
-	
+
 //		return (user != null) ? new ArrayList<>(user.getFriends()): null;
-		return (user != null) ? user.getFriends(): null;
+		return (user != null) ? user.getFriends() : null;
 	}
 
 	public void deleteUserById(Long userId) {
-		
+
 		if (userRepository.existsById(userId)) {
-			 userRepository.deleteById(userId);
+			userRepository.deleteById(userId);
 		}
 	}
-	
-	public List<UserEntity> getAllUser(){
+
+	public List<UserEntity> getAllUser() {
 		return userRepository.findAll();
 	}
 
 	public GetFriendListDto getAllFriendListWithDetails(Long userId, List<UserEntity> friendList) {
 		List<UsersFriendEntityDto> userFriendEntityList = new ArrayList<>();
-		
-		for(UserEntity f: friendList) {
+
+		for (UserEntity f : friendList) {
 			var friendClosingBalance = balanceService.getNetBalanceDetail(userId, f.getUserId());
 			var lastTransactionDate = balanceService.getLastTransactionDateDetail(userId, f.getUserId());
-			userFriendEntityList.add(new UsersFriendEntityDto(f,friendClosingBalance,lastTransactionDate));
+			userFriendEntityList.add(new UsersFriendEntityDto(f, friendClosingBalance, lastTransactionDate));
 		}
-		
-		userFriendEntityList.sort(
-			    Comparator.comparing(
-			        UsersFriendEntityDto::getLastTransactionDate, 
-			        Comparator.nullsLast(Comparator.reverseOrder())
-			    )
-			);
+
+		userFriendEntityList.sort(Comparator.comparing(UsersFriendEntityDto::getLastTransactionDate,
+				Comparator.nullsLast(Comparator.reverseOrder())));
 
 //		userFriendEntityList.sort((a, b) -> {
 //            if (a.getLastTransactionDate() == null) return 1; // null dates go to the end
 //            if (b.getLastTransactionDate() == null) return -1; // null dates go to the end
 //            return b.getLastTransactionDate().compareTo(a.getLastTransactionDate()); // Descending order
 //        });
-		
+
 		System.out.println(userFriendEntityList);
-		
-		return new GetFriendListDto(null,userFriendEntityList);
+
+		return new GetFriendListDto(null, userFriendEntityList);
 	}
 
 	public UserEntity getUserById(Long friendId) {
 		var friend = userRepository.findById(friendId);
-		if(friend.isPresent()) {
+		if (friend.isPresent()) {
 			return friend.get();
 		}
 		return null;
+		
 	}
+
+	public UserEntity findUserById(Long senderId) {
+		return userRepository.findById(senderId)
+				.orElseThrow(() -> new EntityNotFoundException("User with ID " + senderId + " not found"));
+	}
+
+	public UserEntity findUserByContactNo(String recieverContactNo) {
+		
+		return userRepository.findByContactNo(recieverContactNo);
+	}
+
 }
