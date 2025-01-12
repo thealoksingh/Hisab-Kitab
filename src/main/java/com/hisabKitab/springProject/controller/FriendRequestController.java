@@ -20,6 +20,7 @@ public class FriendRequestController {
     
     @Autowired
     private UserService userService;
+    
 
     @PostMapping("/send")
     public ResponseEntity<String> sendRequest(@RequestParam Long senderId, @RequestParam String recieverContactNo) {
