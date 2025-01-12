@@ -20,7 +20,7 @@ import com.hisabKitab.springProject.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
-
+import java.lang.String;
 @Service
 public class UserService {
 
@@ -72,10 +72,23 @@ public class UserService {
 		return friend;
 
 	}
+	@Transactional
+	public String updatePassword(String email, String newPassword) {
+	    UserEntity user = userRepository.findByEmail(email);
+
+	    if (user == null) {
+	        throw new EntityNotFoundException("User with email " + email + " does not exist");
+	    }
+
+	    user.setPassword(newPassword);
+	    userRepository.save(user);
+
+	    return "Password updated successfully!";
+	}
 
 	public UserEntity addFriend(UserEntity user, UserEntity friend) {
-
 		
+		user.getFriends().add(friend);
 		friend.getFriends().add(user);
 		userRepository.save(user);
 		userRepository.save(friend);
