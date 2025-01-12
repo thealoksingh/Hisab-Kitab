@@ -78,12 +78,12 @@ public class EmailNotificationService {
             Transport.send(message);
 
             // Log success
-            System.out.println("OTP sent to: " + recipientEmail);
+            System.out.println("Invitation sent to: " + recipientEmail);
             
             return true;
         } catch (MessagingException e) {
             e.printStackTrace();
-            System.out.println("Failed to send OTP to: " + recipientEmail);
+            System.out.println("Failed to send Invitation to: " + recipientEmail);
             return false;
         }
     }

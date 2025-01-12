@@ -79,7 +79,7 @@ public class UserController {
     public ResponseEntity<String> sendOTPMail(@RequestParam("email") String recipientEmail){
     	var otp = emailNotificationService.sendOtpNotification(recipientEmail);
     	if(otp != null) {
-    		return ResponseEntity.ok("otp");
+    		return ResponseEntity.ok(otp);
     	} return ResponseEntity.badRequest().body(null);
     }
     
