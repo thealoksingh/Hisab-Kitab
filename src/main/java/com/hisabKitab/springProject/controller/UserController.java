@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import com.hisabKitab.springProject.dto.GetFriendListDto;
 import com.hisabKitab.springProject.dto.SignUpUserDto;
 import com.hisabKitab.springProject.entity.UserEntity;
+import com.hisabKitab.springProject.service.EmailNotificationService;
 import com.hisabKitab.springProject.service.UserService;
 
 @RestController
@@ -21,6 +22,9 @@ public class UserController {
 
     @Autowired
 	private UserService userService;
+    
+    @Autowired
+    private EmailNotificationService emailNotificationService;
 
     // Login endpoint
     @PostMapping("/login")
@@ -62,6 +66,21 @@ public class UserController {
     	if (friend != null) {
     		return ResponseEntity.ok("Friend Added Successfully");
     	} return ResponseEntity.status(400).body("User not existed with the contact no = "+contactNo);  // If user not exists
+    }
+    
+    @PostMapping("/sendInvite")
+    public ResponseEntity<String> sendInviteEmail(@RequestParam("email") String recipientEmail,@RequestParam("senderName") String senderName){
+    	if(emailNotificationService.sendInviteNotification(recipientEmail, senderName)) {
+    		return ResponseEntity.ok("Invite Sent Successfully");
+    	} return ResponseEntity.badRequest().body("Invite failed");
+    }
+    
+    @PostMapping("/sendOTP")
+    public ResponseEntity<String> sendOTPMail(@RequestParam("email") String recipientEmail){
+    	var otp = emailNotificationService.sendOtpNotification(recipientEmail);
+    	if(otp != null) {
+    		return ResponseEntity.ok(otp);
+    	} return ResponseEntity.badRequest().body(null);
     }
     
     @DeleteMapping("/{userId}/friends/{friendId}")
