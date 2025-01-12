@@ -1,10 +1,7 @@
 package com.hisabKitab.springProject.entity;
 
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -21,140 +18,153 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "users") // Specify the table name for the entity
+@Table(name = "users")
 public class UserEntity {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long userId;
-	
-	private String fullName;
-	
-	@Column(unique = true)
-	private String email;
-	private String password;
-	private String role;
-	@Column(unique = true)
-	private String contactNo;
-	
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long userId;
 
-	@ManyToMany
-	@JoinTable(name = "friendship", // Join table name
-			joinColumns = @JoinColumn(name = "user_id"), // Foreign key for this user
-			inverseJoinColumns = @JoinColumn(name = "friend_id") // Foreign key for the friend user
-	)
-	@JsonIgnore
-	private List<UserEntity> friends = new ArrayList<>(); // Set of friends
+    private String fullName;
 
-	 @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
-	 @JsonIgnore
-	    private List<TransactionComment> comments;
-	
-	// Constructors, Getters, Setters
+    @Column(unique = true)
+    private String email;
 
-	// Default constructor
-	public UserEntity() {
-	}
+    private String password;
 
-	// Parameterized constructor
-	public UserEntity(String fullName, String email, String password, String role, String contactNo) {
-		this.fullName = fullName;
-		this.email = email;
-		this.password = password;
-		this.role = role;
-		this.contactNo = contactNo;
-	}
+    private String role;
 
-	
+    @Column(unique = true)
+    private String contactNo;
 
-	public UserEntity(String fullName, String email, String password, String contactNo) {
-		this.fullName = fullName;
-		this.email = email;
-		this.password = password;
-		this.contactNo = contactNo;
-	}
+    @ManyToMany
+    @JoinTable(name = "friendship",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "friend_id")
+    )
+    @JsonIgnore
+    private List<UserEntity> friends = new ArrayList<>();
 
-	public Long getUserId() {
-		return userId;
-	}
+    @OneToMany(mappedBy = "sender", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<FriendRequestEntity> sentRequests = new ArrayList<>();
 
-	public void setUserId(Long userId) {
-		this.userId = userId;
-	}
+    @OneToMany(mappedBy = "receiver", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<FriendRequestEntity> receivedRequests = new ArrayList<>();
 
-	public String getContactNo() {
-		return contactNo;
-	}
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<TransactionComment> comments;
 
-	public void setContactNo(String contactNo) {
-		this.contactNo = contactNo;
-	}
+    public UserEntity() {
+    }
 
-	public List<UserEntity> getFriends() {
-		return friends;
-	}
+    public UserEntity(String fullName, String email, String password, String role, String contactNo) {
+        this.fullName = fullName;
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.contactNo = contactNo;
+    }
+    
+    
+ // Convenience method to add a friend (and ensure bidirectional friendship)
+ 	public void addFriend(UserEntity friend) {
+ 		this.friends.add(friend);
+ 		friend.getFriends().add(this); // Ensure mutual friendship
+ 	}
 
-	public void setFriends(List<UserEntity> friends) {
-		this.friends = friends;
-	}
+ 	// Convenience method to remove a friend
+ 	public void removeFriend(UserEntity friend) {
+ 		this.friends.remove(friend);
+ 		friend.getFriends().remove(this); // Ensure mutual removal
+ 	}
 
-	// Convenience method to add a friend (and ensure bidirectional friendship)
-	public void addFriend(UserEntity friend) {
-		this.friends.add(friend);
-		friend.getFriends().add(this); // Ensure mutual friendship
-	}
+    public Long getUserId() {
+        return userId;
+    }
 
-	// Convenience method to remove a friend
-	public void removeFriend(UserEntity friend) {
-		this.friends.remove(friend);
-		friend.getFriends().remove(this); // Ensure mutual removal
-	}
+    public void setUserId(Long userId) {
+        this.userId = userId;
+    }
 
-	public String getFullName() {
-		return fullName;
-	}
+    public String getFullName() {
+        return fullName;
+    }
 
-	public void setFullName(String fullName) {
-		this.fullName = fullName;
-	}
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
 
-	public String getEmail() {
-		return email;
-	}
+    public String getEmail() {
+        return email;
+    }
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
-	public String getPassword() {
-		return password;
-	}
+    public String getPassword() {
+        return password;
+    }
 
-	public void setPassword(String password) {
-		this.password = password;
-	}
+    public void setPassword(String password) {
+        this.password = password;
+    }
 
-	public String getRole() {
-		return role;
-	}
+    public String getRole() {
+        return role;
+    }
 
-	public void setRole(String role) {
-		this.role = role;
-	}
+    public void setRole(String role) {
+        this.role = role;
+    }
 
-	public List<TransactionComment> getComments() {
-		return comments;
-	}
+    public String getContactNo() {
+        return contactNo;
+    }
 
-	public void setComments(List<TransactionComment> comments) {
-		this.comments = comments;
-	}
+    public void setContactNo(String contactNo) {
+        this.contactNo = contactNo;
+    }
 
-	@Override
-	public String toString() {
-		return "UserEntity [userId=" + userId + ", fullName=" + fullName + ", email=" + email + ", password=" + password
-				+ ", role=" + role + ", contactNo=" + contactNo + ", friends=" +  "abcd"+ "]";
-	}
+    public List<UserEntity> getFriends() {
+        return friends;
+    }
 
-	
+    public void setFriends(List<UserEntity> friends) {
+        this.friends = friends;
+    }
+
+    public List<FriendRequestEntity> getSentRequests() {
+        return sentRequests;
+    }
+
+    public void setSentRequests(List<FriendRequestEntity> sentRequests) {
+        this.sentRequests = sentRequests;
+    }
+
+    public List<FriendRequestEntity> getReceivedRequests() {
+        return receivedRequests;
+    }
+
+    public void setReceivedRequests(List<FriendRequestEntity> receivedRequests) {
+        this.receivedRequests = receivedRequests;
+    }
+
+    public List<TransactionComment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<TransactionComment> comments) {
+        this.comments = comments;
+    }
+
+    @Override
+    public String toString() {
+        return "UserEntity [userId=" + userId + ", fullName=" + fullName + ", email=" + email + ", password=" + password
+                + ", role=" + role + ", contactNo=" + contactNo + "]";
+    }
 }
+
