@@ -25,7 +25,6 @@ public class EmailNotificationService {
 //        // Call the method with the email address
 //        sendOTP("your-mail-id@gmail.com");
 //    }
-
     // Send Invitation message to the provided email address
     public  boolean sendInviteNotification(String recipientEmail, String senderName) {
        
