@@ -18,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hisabKitab.springProject.dto.TransactionDetailsDto;
-import com.hisabKitab.springProject.dto.UpdateTransactionDto;
 import com.hisabKitab.springProject.entity.Transaction;
 import com.hisabKitab.springProject.service.TransactionService;
 import com.hisabKitab.springProject.service.UserService;
@@ -45,40 +44,15 @@ public class FriendTransactionController {
     }
     
     @PutMapping("/updatefriendTransactions")
-    public ResponseEntity<Transaction> updateTransaction(@RequestBody UpdateTransactionDto transactionDto){
-    	Transaction transaction =new Transaction();
-    	if(transactionDto!=null) {
-    		transaction.setAmount(transactionDto.getAmount());
-    		transaction.setDescription(transactionDto.getDescription());
-    		transaction.setTransDate(transactionDto.getTransDate());
-    		transaction.setCreatedBy(transactionDto.getCreatedBy());
-    		transaction.setTransId(transactionDto.getTransId());
-    		String newType=transactionDto.getTransType();
-    		
-    		if((newType=="got") && (transactionDto.getCreatedBy()==transactionDto.getFromUserId())   ) {
-    			long temp = transactionDto.getFromUserId();
-    			transactionDto.setFromUserId(transactionDto.getToUserId());
-    			transactionDto.setToUserId(temp);
-    		}
-    		else if ((newType=="give") && (transactionDto.getCreatedBy()!=transactionDto.getFromUserId())){
-    			long temp = transactionDto.getFromUserId();
-    			transactionDto.setFromUserId(transactionDto.getToUserId());
-    			transactionDto.setToUserId(temp);
-    	
-    		}
-    		transaction.setFromUserId(transactionDto.getFromUserId());
-    		transaction.setToUserId(transactionDto.getToUserId());
-    	
-    	
+    public ResponseEntity<Transaction> updateTransaction(@RequestBody Transaction transaction){
     	System.out.println("Updated tran = "+transaction.toString());
     	
     	Transaction updatedTransaction = transactionService.updateTransaction(transaction);
     	
     	return ResponseEntity.ok(updatedTransaction);
     	
-    }return ResponseEntity.badRequest().body(null);
-    	
     }
+    
     
     @GetMapping("/getAllTransactionWithFriend")
     public ResponseEntity<List<TransactionDetailsDto>> getAllTransactionWithFriend(@RequestParam("userId") Long userId, @RequestParam("friendId") Long friendId){
