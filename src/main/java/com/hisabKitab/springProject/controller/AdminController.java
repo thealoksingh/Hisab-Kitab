@@ -23,7 +23,6 @@ public class AdminController {
 	  @Autowired
 		private UserService userService;
 	  
-	  
 	  @DeleteMapping("/user/{userId}") 
 	    public ResponseEntity<String> deleteUserById(@PathVariable("userId") Long userId){
 	    	userService.deleteUserById(userId);

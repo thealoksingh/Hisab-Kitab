@@ -53,6 +53,7 @@ public class FriendTransactionController {
     	
     }
     
+    
     @GetMapping("/getAllTransactionWithFriend")
     public ResponseEntity<List<TransactionDetailsDto>> getAllTransactionWithFriend(@RequestParam("userId") Long userId, @RequestParam("friendId") Long friendId){
     	var transactions = transactionService.getAllTransactionWithFriend(userId,friendId);

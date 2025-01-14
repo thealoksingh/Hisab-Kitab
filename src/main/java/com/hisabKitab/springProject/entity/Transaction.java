@@ -29,28 +29,30 @@ public class Transaction {
 
     @Column(name = "description")
     private String description;
-    
+
+
+    @Column(name = "created_by", nullable = false)
+    private Long createdBy;
+
     @OneToMany(mappedBy = "transaction", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<TransactionComment> comments;
 
     public Transaction() {
-		
-	}
+    }
 
-    
-	public Transaction(Long transId, Long fromUserId, Long toUserId, Double amount, LocalDate transDate,
-			String description) {
-		this.transId = transId;
-		this.fromUserId = fromUserId;
-		this.toUserId = toUserId;
-		this.amount = amount;
-		this.transDate = transDate;
-		this.description = description;
-	}
+    public Transaction(Long transId, Long fromUserId, Long toUserId, Double amount, LocalDate transDate,
+                       String description, Long createdBy) {
+        this.transId = transId;
+        this.fromUserId = fromUserId;
+        this.toUserId = toUserId;
+        this.amount = amount;
+        this.transDate = transDate;
+        this.description = description;
+        this.createdBy = createdBy;
+    }
 
-
-	// Getters and Setters
+    // Getters and Setters
     public Long getTransId() {
         return transId;
     }
@@ -99,13 +101,28 @@ public class Transaction {
         this.description = description;
     }
 
+    public Long getCreatedBy() {
+        return createdBy;
+    }
 
-	public List<TransactionComment> getComments() {
-		return comments;
-	}
+    public void setCreatedBy(Long createdBy) {
+        this.createdBy = createdBy;
+    }
 
+    public List<TransactionComment> getComments() {
+        return comments;
+    }
 
-	public void setComments(List<TransactionComment> comments) {
-		this.comments = comments;
-	}
+    public void setComments(List<TransactionComment> comments) {
+        this.comments = comments;
+    }
+
+    @Override
+    public String toString() {
+        return "Transaction [transId=" + transId + ", fromUserId=" + fromUserId + ", toUserId=" + toUserId + ", amount="
+                + amount + ", transDate=" + transDate + ", description=" + description + ", createdBy=" + createdBy
+                + ", comments=" + comments + "]";
+    }
+    
+
 }

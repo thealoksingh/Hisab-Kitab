@@ -19,7 +19,7 @@ public class TransactionComment {
     @JoinColumn(name = "user_id", nullable = false) // Foreign key to UserEntity table
     private UserEntity user;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 1000) // Adjust length as needed
     private String comment;
 
     @Column(name = "comment_time", nullable = false)

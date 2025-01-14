@@ -53,6 +53,7 @@ public class TransactionService {
 		return transactionRepository.save(transaction);
 	}
 
+
 	public List<Transaction> getAllTransactionWithFriend(Long userId, Long friendId) {
 		return transactionRepository.findAllTransactionWithFriend(userId, friendId);
 

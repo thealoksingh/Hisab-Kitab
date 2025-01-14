@@ -1,6 +1,7 @@
 package com.hisabKitab.springProject.controller;
 
 import java.util.HashMap;
+import java.lang.String;
 import java.util.Map;
 import java.util.Set;
 
@@ -14,6 +15,8 @@ import com.hisabKitab.springProject.dto.SignUpUserDto;
 import com.hisabKitab.springProject.entity.UserEntity;
 import com.hisabKitab.springProject.service.EmailNotificationService;
 import com.hisabKitab.springProject.service.UserService;
+
+import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/user")
@@ -88,6 +91,23 @@ public class UserController {
         userService.removeFriend(userId, friendId);
         return ResponseEntity.ok("Friend removed successfully.");
     }
+    
+
+   
+    @PostMapping("/update-password")
+    public ResponseEntity<String> updatePassword(
+            @RequestParam("email") String email, 
+            @RequestParam("newPassword") String newPassword) {
+        try {
+            var response = userService.updatePassword(email, newPassword);
+            return ResponseEntity.ok(response);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred while updating the password.");
+        }
+    }
+
     
     @GetMapping("/getAllFriendList/{userId}")
     public ResponseEntity<GetFriendListDto> getAllFriends(@PathVariable("userId") Long userId){
