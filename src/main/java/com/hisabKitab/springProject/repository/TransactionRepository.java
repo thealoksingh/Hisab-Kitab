@@ -29,7 +29,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
 	            @Param("friendId") Long friendId,
 	            @Param("fromDate") LocalDate fromDate,
 	            @Param("toDate") LocalDate toDate);
-    
+	
     @Query(value = "SELECT * FROM transactions WHERE "
             + "(from_user_id = ?1 AND to_user_id = ?2) "
             + "OR (from_user_id = ?2 AND to_user_id = ?1) "

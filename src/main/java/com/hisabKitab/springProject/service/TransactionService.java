@@ -6,6 +6,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.hisabKitab.springProject.entity.Balance;
 import com.hisabKitab.springProject.entity.Transaction;
 import com.hisabKitab.springProject.repository.BalanceRepository;
 import com.hisabKitab.springProject.repository.TransactionRepository;
@@ -75,11 +76,14 @@ public class TransactionService {
         // Delete the transaction (cascade removes comments as well)
         transactionRepository.delete(transaction);
     }
-
+						
 	 public List<Transaction> getTransactionsByDateRange(Long userId, Long friendId, LocalDate fromDate, LocalDate toDate) {
 	        // Assuming you're using JPA or a similar ORM, modify the query accordingly
 	        return transactionRepository.findTransactionsBetweenUsersAndDateRange(userId, friendId, fromDate, toDate);
 	    }
-  
+	 public List<Balance> getTransactionsByUserId(Long userId) {
+	        // Assuming you're using JPA or a similar ORM, modify the query accordingly
+	        return (List<Balance>) balanceRepository.findByUserId(userId);
+	    }
 
 }

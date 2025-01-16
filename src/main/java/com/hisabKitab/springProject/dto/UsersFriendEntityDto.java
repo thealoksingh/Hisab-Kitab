@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.hisabKitab.springProject.entity.UserEntity;
-
+						
 public class UsersFriendEntityDto {
 	
 	private UserEntity userEntity;
