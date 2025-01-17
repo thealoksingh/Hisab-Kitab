@@ -24,7 +24,7 @@ import com.hisabKitab.springProject.service.UserService;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class FriendTransactionController {
 
     @Autowired
