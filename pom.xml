@@ -77,15 +77,20 @@
 			<version>7.2.3</version>
 			<type>pom</type>
 		</dependency>
-		
+
 		<!-- JavaMail API -->
 		<dependency>
 			<groupId>com.sun.mail</groupId>
 			<artifactId>javax.mail</artifactId>
 			<version>1.6.2</version>
 		</dependency>
-	
-		
+
+		<!-- for .env file -->
+		<dependency>
+			<groupId>io.github.cdimascio</groupId>
+			<artifactId>dotenv-java</artifactId>
+			<version>3.0.0</version>
+		</dependency>
 
 
 	</dependencies>

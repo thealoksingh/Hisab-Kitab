@@ -16,6 +16,8 @@ import com.hisabKitab.springProject.repository.TransactionCommentsRepository;
 import com.hisabKitab.springProject.repository.TransactionRepository;
 import com.hisabKitab.springProject.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class CommentService {
 	
@@ -64,5 +66,16 @@ public class CommentService {
 	        
 	        return null;
 	    }
+	  
+	  public TransactionComment getCommentById(Long commentId) {
+	        return transactionCommentsRepository.findById(commentId)
+	                .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID: " + commentId));
+	    }
+
+	public void deleteById(Long commentId) {
+		var comment = getCommentById(commentId);
+		transactionCommentsRepository.deleteById(commentId);
+		
+	}
 
 }
