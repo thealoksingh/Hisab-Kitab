@@ -58,7 +58,7 @@ public class CommentService {
 	        	
 	        	
 	        	for(TransactionComment tc:comments) {
-	        		commentsList.add(new CommentResponseDto(tc.getUser().getFullName(), tc.getComment(), tc.getCommentTime()));
+	        		commentsList.add(new CommentResponseDto(tc.getCommentId(), tc.getUser().getUserId(), tc.getUser().getColorHexValue() ,tc.getUser().getFullName(), tc.getComment(), tc.getCommentTime()));
 	        	}
 	        	
 	        	return commentsList;
