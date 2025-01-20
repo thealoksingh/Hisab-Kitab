@@ -53,7 +53,7 @@ public class TransactionCommentController {
 		} return ResponseEntity.badRequest().body(null);
 	}
 	
-	@DeleteMapping("/transaction/{commentId}")
+	@DeleteMapping("/transaction/comment/{commentId}")
 	public ResponseEntity<String> deleteCommentById(@PathVariable("commentId")Long commentId){
 		
 		commentService.deleteById(commentId);
