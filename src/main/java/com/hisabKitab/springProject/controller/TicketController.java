@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hisabKitab.springProject.dto.TicketRequest;
 import com.hisabKitab.springProject.entity.Ticket;
 import com.hisabKitab.springProject.service.TicketService;
 
@@ -25,8 +26,12 @@ public class TicketController {
     private TicketService ticketService;
 
     @PostMapping
-    public ResponseEntity<Ticket> createTicket(@RequestBody Ticket ticket) {
-        Ticket createdTicket = ticketService.createTicket(ticket);
+    public ResponseEntity<Ticket> createTicket(@RequestBody TicketRequest ticketRequest) {
+        Ticket createdTicket = ticketService.createTicket(
+                ticketRequest.getTitle(),
+                ticketRequest.getDescription(),
+                ticketRequest.getUserId()
+        );
         return new ResponseEntity<>(createdTicket, HttpStatus.CREATED);
     }
 

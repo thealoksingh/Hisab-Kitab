@@ -14,8 +14,12 @@ public class TicketService {
     @Autowired
     private TicketRepository ticketRepository;
 
-    public Ticket createTicket(Ticket ticket) {
-        ticket.setStatus("OPEN");
+    public Ticket createTicket(String title, String description, Long userId) {
+        Ticket ticket = new Ticket();
+        ticket.setIssueTitle(title);
+        ticket.setDescription(description);
+        ticket.setUserId(userId);
+        ticket.setStatus("OPEN"); // Default status
         return ticketRepository.save(ticket);
     }
 
