@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.hisabKitab.springProject.dto.FriendRequestResponse;
+import com.hisabKitab.springProject.dto.FriendRequestStatus;
 import com.hisabKitab.springProject.entity.FriendRequestEntity;
 import com.hisabKitab.springProject.entity.UserEntity;
 import com.hisabKitab.springProject.repository.FriendRequestRepository;
@@ -18,19 +20,32 @@ public class FriendRequestService {
 	@Autowired
 	private UserService userService;
 
-	public FriendRequestEntity sendRequest(UserEntity sender, UserEntity receiver) {
+	public FriendRequestResponse sendRequest(UserEntity sender, UserEntity receiver) {
 
-		for (UserEntity f : sender.getFriends()) {
-			if (f.getUserId() == receiver.getUserId()) {
-				return null;
-			}
-		}
-		FriendRequestEntity friendRequest = new FriendRequestEntity();
-		friendRequest.setSender(sender);
-		friendRequest.setReceiver(receiver);
-		friendRequest.setStatus("PENDING");
-		return friendRequestRepository.save(friendRequest);
+	    if (sender.getUserId().equals(receiver.getUserId())) {
+	        return new FriendRequestResponse(FriendRequestStatus.SELF_REQUEST_NOT_ALLOWED, null);
+	    }
+
+	    for (UserEntity friend : sender.getFriends()) {
+	        if (friend.getUserId().equals(receiver.getUserId())) {
+	            return new FriendRequestResponse(FriendRequestStatus.ALREADY_FRIENDS, null);
+	        }
+	    }
+
+	    var existingRequest = friendRequestRepository.findBySenderAndReceiver(sender, receiver);
+	    if (existingRequest != null) {
+	        return new FriendRequestResponse(FriendRequestStatus.REQUEST_ALREADY_SENT, existingRequest);
+	    }
+
+	    FriendRequestEntity friendRequest = new FriendRequestEntity();
+	    friendRequest.setSender(sender);
+	    friendRequest.setReceiver(receiver);
+	    friendRequest.setStatus("PENDING");
+
+	    FriendRequestEntity savedRequest = friendRequestRepository.save(friendRequest);
+	    return new FriendRequestResponse(FriendRequestStatus.REQUEST_SENT, savedRequest);
 	}
+
 
 	public FriendRequestEntity acceptRequest(Long requestId) {
 		FriendRequestEntity request = friendRequestRepository.findById(requestId)
