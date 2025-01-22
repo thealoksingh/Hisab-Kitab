@@ -24,7 +24,7 @@ public class TicketService {
     }
 
     public List<Ticket> getTicketsByUserId(Long userId) {
-        return ticketRepository.findByUserId(userId);
+    	return ticketRepository.findByUserIdAndStatusNot(userId, "DELETED BY USER");
     }
 
     public Ticket updateTicket(Long ticketId, String status, String description) {
@@ -39,5 +39,16 @@ public class TicketService {
         }
         return ticketRepository.save(ticket);
     }
+
+	
+	public Ticket deleteTicket(Long ticketId) {
+		var ticket = ticketRepository.findById(ticketId);
+		if(ticket.isPresent()) {
+			ticket.get().setStatus("DELETED BY USER");
+			ticketRepository.save(ticket.get());
+			return ticket.get();
+		}
+		return null;
+	}
 }
 

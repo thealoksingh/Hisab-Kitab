@@ -32,7 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 /target/
-/target/
+/target/classes/
 
 
 # for env

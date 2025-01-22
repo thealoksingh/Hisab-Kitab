@@ -10,5 +10,6 @@ import com.hisabKitab.springProject.entity.Ticket;
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
     List<Ticket> findByUserId(Long userId);
+    List<Ticket> findByUserIdAndStatusNot(Long userId, String status);
 }
 
