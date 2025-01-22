@@ -36,6 +36,7 @@ public class FriendRequestController {
 
         switch (response.getStatus()) {
             case SELF_REQUEST_NOT_ALLOWED:
+            	System.out.println("self request error");
                 return ResponseEntity.badRequest().body("You cannot send a friend request to yourself.");
             case ALREADY_FRIENDS:
                 return ResponseEntity.badRequest().body("You are already friends.");
