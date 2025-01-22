@@ -30,6 +30,9 @@ public class UserService {
 
 	@Autowired
 	private BalanceService balanceService;
+	
+	@Autowired
+	private FriendRequestService friendRequestService;
 
 	// Method to log in user by checking email and password
 	public UserEntity login(String email, String password) {
@@ -163,7 +166,8 @@ public class UserService {
 
 		System.out.println(userFriendEntityList);
 
-		return new GetFriendListDto(null, userFriendEntityList);
+		var friendRequestCount = friendRequestService.getAllPendingRequests(userId).size() + friendRequestService.getAllSentRequests(userId).size();
+		return new GetFriendListDto("Friend List founded", userFriendEntityList, friendRequestCount);
 	}
 
 	public UserEntity getUserById(Long friendId) {

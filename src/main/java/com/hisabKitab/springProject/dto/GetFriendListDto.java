@@ -8,12 +8,28 @@ public class GetFriendListDto {
 	
 	private String message;
 	private List<UsersFriendEntityDto> friendList;
+	private Integer friendRequestCount;
 	public GetFriendListDto() {
 		// TODO Auto-generated constructor 
 	}
 	public GetFriendListDto(String message, List<UsersFriendEntityDto> friendList) {
 		this.message = message;
 		this.friendList = friendList;
+	}
+	
+	
+	public GetFriendListDto(String message, List<UsersFriendEntityDto> friendList, Integer friendRequestCount) {
+		this.message = message;
+		this.friendList = friendList;
+		this.friendRequestCount = friendRequestCount;
+	}
+	
+	
+	public Integer getFriendRequestCount() {
+		return friendRequestCount;
+	}
+	public void setFriendRequestCount(Integer friendRequestCount) {
+		this.friendRequestCount = friendRequestCount;
 	}
 	public String getMessage() {
 		return message;
