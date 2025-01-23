@@ -20,7 +20,7 @@ import jakarta.persistence.EntityNotFoundException;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class UserController {
 
     @Autowired

@@ -3,6 +3,7 @@ package com.hisabKitab.springProject.controller;
 
 
 import java.util.List;
+import java.util.Random;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -14,14 +15,17 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hisabKitab.springProject.entity.UserEntity;
+import com.hisabKitab.springProject.repository.UserRepository;
 import com.hisabKitab.springProject.service.UserService;
 
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class AdminController {
 	  @Autowired
 		private UserService userService;
+	  @Autowired
+	  private UserRepository userRepository;
 	  
 	  @DeleteMapping("/user/{userId}") 
 	    public ResponseEntity<String> deleteUserById(@PathVariable("userId") Long userId){
@@ -33,8 +37,13 @@ public class AdminController {
 	  
 	  @GetMapping("/getAllUser")
 	  public ResponseEntity<List<UserEntity>> getAllUsers(){
-		  return ResponseEntity.ok(userService.getAllUser());
+		  var users = userService.getAllUser();
+		  
+		  return ResponseEntity.ok(users);
 	  }
+	  
+	 
+
 	  
 
 }

@@ -56,6 +56,9 @@ public class UserEntity {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<TransactionComment> comments;
+    
+    @Column(nullable = false)
+    private String colorHexValue;
 
     public UserEntity() {
     }
@@ -69,7 +72,19 @@ public class UserEntity {
     }
     
     
- // Convenience method to add a friend (and ensure bidirectional friendship)
+    
+    
+ public UserEntity(String fullName, String email, String password, String role, String contactNo,
+			String colorHexValue) {
+		this.fullName = fullName;
+		this.email = email;
+		this.password = password;
+		this.role = role;
+		this.contactNo = contactNo;
+		this.colorHexValue = colorHexValue;
+	}
+
+// Convenience method to add a friend (and ensure bidirectional friendship)
  	public void addFriend(UserEntity friend) {
  		this.friends.add(friend);
  		friend.getFriends().add(this); // Ensure mutual friendship
@@ -161,7 +176,16 @@ public class UserEntity {
         this.comments = comments;
     }
 
-    @Override
+    
+    public String getColorHexValue() {
+		return colorHexValue;
+	}
+
+	public void setColorHexValue(String colorHexValue) {
+		this.colorHexValue = colorHexValue;
+	}
+
+	@Override
     public String toString() {
         return "UserEntity [userId=" + userId + ", fullName=" + fullName + ", email=" + email + ", password=" + password
                 + ", role=" + role + ", contactNo=" + contactNo + "]";

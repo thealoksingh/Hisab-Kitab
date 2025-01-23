@@ -1,0 +1,5 @@
+# Created at 2025-01-17T23:28:31.879
+Boot Manifest-JAR contains absolute paths in classpath 'D:\dsa\hisabKitab\hisabKitab\target\test-classes'
+Hint: <argLine>-Djdk.net.URLClassPath.disableClassPathURLCheck=true</argLine>
+'other' has different root
+

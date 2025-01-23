@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hisabKitab.springProject.entity.Balance;
 import com.hisabKitab.springProject.entity.Transaction;
 import com.hisabKitab.springProject.repository.TransactionRepository;
 import com.hisabKitab.springProject.service.TransactionReportService;
@@ -22,9 +23,10 @@ import com.hisabKitab.springProject.service.UserService;
 
 @RestController
 //@RequestMapping("/report")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class TransactionReportController {
 
+	
 	@Autowired
     private  TransactionReportService reportService;
 	@Autowired
@@ -106,7 +108,34 @@ public class TransactionReportController {
     	}
     	return new ReportData(runningBalance, totalDebit, totalCredit);
     }
+    
+    
+    @GetMapping("/api/reports/whole-transaction")
+    public ResponseEntity<byte[]> generateWholeTransactionReport( @RequestParam ("userId") Long userId){
+    	
+    	
+    	  // Get user details
+        var user = userService.getUserById(userId);
+	     var friendList = userService.getAllFriendList(userId);
+    	
+    	 var gfl = userService.getAllFriendListWithDetails(userId, friendList);
+    
+    	 
+//        List<Balance> Balance = transactionService.getTransactionsByUserId(userId);
+    	
+        
+    	 byte[] pdfData = reportService.generateWholeTransactionReport(gfl ,user.getFullName());
+
+         // Return the generated PDF as an attachment
+         return ResponseEntity.ok()
+                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + user.getFullName() + "-transaction-report.pdf")
+                 .contentType(MediaType.APPLICATION_PDF)
+                 .body(pdfData);
+    
+    }
 }
+
+
 
 class ReportData {
 	private double runningBalance;

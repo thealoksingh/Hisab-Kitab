@@ -3,16 +3,18 @@ package com.hisabKitab.springProject.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import com.hisabKitab.springProject.dto.FriendRequestResponse;
 import com.hisabKitab.springProject.entity.FriendRequestEntity;
 import com.hisabKitab.springProject.service.FriendRequestService;
 import com.hisabKitab.springProject.service.UserService;
 
 @RestController
 @RequestMapping("/user/friend-request")
-@CrossOrigin(origins = "http://localhost:3000")
+@CrossOrigin(origins = "*")
 public class FriendRequestController {
 
     @Autowired
@@ -29,11 +31,22 @@ public class FriendRequestController {
     	if(sender==null || reciever==null) {
     		return ResponseEntity.badRequest().body("User not exist");
     	}
-    	var request = friendRequestService.sendRequest(sender, reciever);
-    	if(request==null) {
-    		return ResponseEntity.badRequest().body("User already in Friend List");
-    	}
-    	return ResponseEntity.ok().body("Friend request Sent");
+
+        FriendRequestResponse response = friendRequestService.sendRequest(sender, reciever);
+
+        switch (response.getStatus()) {
+            case SELF_REQUEST_NOT_ALLOWED:
+            	System.out.println("self request error");
+                return ResponseEntity.badRequest().body("You cannot send a friend request to yourself.");
+            case ALREADY_FRIENDS:
+                return ResponseEntity.badRequest().body("You are already friends.");
+            case REQUEST_ALREADY_SENT:
+                return ResponseEntity.badRequest().body("Friend request already sent.");
+            case REQUEST_SENT:
+                return ResponseEntity.ok("Friend request sent successfully!");
+            default:
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+        }
     }
 
     @PutMapping("/accept/{requestId}")

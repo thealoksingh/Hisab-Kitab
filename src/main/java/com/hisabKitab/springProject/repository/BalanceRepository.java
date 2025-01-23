@@ -8,6 +8,8 @@ import com.hisabKitab.springProject.entity.Balance;
 @Repository
 public interface BalanceRepository extends JpaRepository<Balance, Long> {
     Balance findByUserIdAndFriendId(Long userId, Long friendId);
+    
+    Balance findByUserId(Long userId);
 
 	Balance findByFriendIdAndUserId(Long fromUserId, Long toUserId);
 

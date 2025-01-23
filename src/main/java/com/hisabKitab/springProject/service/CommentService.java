@@ -16,6 +16,8 @@ import com.hisabKitab.springProject.repository.TransactionCommentsRepository;
 import com.hisabKitab.springProject.repository.TransactionRepository;
 import com.hisabKitab.springProject.repository.UserRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class CommentService {
 	
@@ -56,7 +58,7 @@ public class CommentService {
 	        	
 	        	
 	        	for(TransactionComment tc:comments) {
-	        		commentsList.add(new CommentResponseDto(tc.getUser().getFullName(), tc.getComment(), tc.getCommentTime()));
+	        		commentsList.add(new CommentResponseDto(tc.getCommentId(), tc.getUser().getUserId(), tc.getUser().getColorHexValue() ,tc.getUser().getFullName(), tc.getComment(), tc.getCommentTime()));
 	        	}
 	        	
 	        	return commentsList;
@@ -64,5 +66,16 @@ public class CommentService {
 	        
 	        return null;
 	    }
+	  
+	  public TransactionComment getCommentById(Long commentId) {
+	        return transactionCommentsRepository.findById(commentId)
+	                .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID: " + commentId));
+	    }
+
+	public void deleteById(Long commentId) {
+		var comment = getCommentById(commentId);
+		transactionCommentsRepository.deleteById(commentId);
+		
+	}
 
 }

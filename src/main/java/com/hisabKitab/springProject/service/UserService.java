@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Random;
 import java.util.List;
 import java.util.Set;
 
@@ -29,6 +30,9 @@ public class UserService {
 
 	@Autowired
 	private BalanceService balanceService;
+	
+	@Autowired
+	private FriendRequestCountService friendRequestCountService;
 
 	// Method to log in user by checking email and password
 	public UserEntity login(String email, String password) {
@@ -52,9 +56,22 @@ public class UserService {
 		}
 
 		userRepository.save(new UserEntity(newUser.getFullName(), newUser.getEmail(), newUser.getPassword(),
-				newUser.getRole(), newUser.getContactNo()));
+				newUser.getRole(), newUser.getContactNo(), getRandomColor()));
 		return "User registered successfully!";
 	}
+	
+	 public  String getRandomColor() {
+	        Random random = new Random();
+	        StringBuilder color = new StringBuilder("#");
+	        
+	        for (int i = 0; i < 6; i++) {
+	            // Restrict to darker shades by using lower hex values (0-8)
+	            int value = random.nextInt(8); // Generate a random number between 0 and 7
+	            color.append(Integer.toHexString(value));
+	        }
+	        
+	        return color.toString();
+	    }
 
 	public UserEntity checkUserExistByContactNumber(Long userId, String contactNo) {
 		UserEntity friend = userRepository.findByContactNo(contactNo);
@@ -149,7 +166,8 @@ public class UserService {
 
 		System.out.println(userFriendEntityList);
 
-		return new GetFriendListDto(null, userFriendEntityList);
+		var friendRequestCount = friendRequestCountService.friendRequestCount(userId);
+		return new GetFriendListDto("Friend List founded", userFriendEntityList, friendRequestCount);
 	}
 
 	public UserEntity getUserById(Long friendId) {
