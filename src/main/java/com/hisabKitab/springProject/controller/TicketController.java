@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,6 +52,15 @@ public class TicketController {
 
         Ticket updatedTicket = ticketService.updateTicket(ticketId, status, description);
         return ResponseEntity.ok(updatedTicket);
+    }
+    
+    @DeleteMapping("/{ticketId}")
+    public ResponseEntity<String> deleteTicket(@PathVariable Long ticketId){
+    	var ticket = ticketService.deleteTicket(ticketId);
+    	
+    	if(ticket != null) {
+    		return new ResponseEntity<String>("Ticket deleted successfully", HttpStatus.OK);
+    	} return ResponseEntity.badRequest().body("ticked with id = "+ticketId +" not exists");
     }
 }
 
