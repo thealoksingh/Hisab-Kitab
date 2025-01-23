@@ -15,7 +15,7 @@ public class FriendRequestCountService {
 	
 	public Integer friendRequestCount(Long userId) {
 		
-		return  friendRequestService.getAllPendingRequests(userId).size() + friendRequestService.getAllSentRequests(userId).size();
+		return  friendRequestService.getAllPendingRequests(userId).size();
 		 
 	}
 	
