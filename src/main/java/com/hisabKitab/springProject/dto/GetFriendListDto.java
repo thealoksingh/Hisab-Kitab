@@ -9,6 +9,7 @@ public class GetFriendListDto {
 	private String message;
 	private List<UsersFriendEntityDto> friendList;
 	private Integer friendRequestCount;
+	
 	public GetFriendListDto() {
 		// TODO Auto-generated constructor 
 	}
