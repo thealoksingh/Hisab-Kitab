@@ -56,6 +56,6 @@ The backend is built with Spring Boot. It utilizes a layered architecture of Con
    
    - Click **OK** on all dialog boxes to save the changes.
 4. Reopen Eclipse IDE to integrate the changes.
-5. Run the main file as a Java application to start the backend server
+5. Run the main file as a Java application to start the backend server.
 
    
