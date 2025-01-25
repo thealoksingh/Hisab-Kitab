@@ -38,24 +38,24 @@ The backend is built with Spring Boot. It utilizes a layered architecture of Con
 - Entities: Represent database tables.
 - DTOs: Facilitate data transfer between layers.
 
-### Configuration Files
-
-- application.properties: Contains database configurations and application settings.
-
 ## How to run the backend
 
 1. Clone the repository:
     `https://github.com/thealoksingh/Hisab-Kitab/`
 2. Navigate to the project directory:
     `cd Hisab-Kitab`
-3. Configure the `application.properties` file:
- ```
-    spring.datasource.url=jdbc:mysql://localhost:3306/hisab_kitab_db
-    spring.datasource.username=your_username
-    spring.datasource.password=your_password
-    spring.jpa.hibernate.ddl-auto=update
-    spring.jpa.show-sql=true
-    jwt.secret=your_secret_key
-``` 
-4. Build and run the project: `mvn spring-boot:run`
+3. Configure the environment variables:
+   - Open the Environment Variables settings on your system.
+   - In the **System Variables** section, click on **New** and add the following variables:
+     
+     | Variable Name                 | Variable Values                          |
+     |-------------------------------|------------------------------------------|
+     | `SPRING_DATASOURCE_URL`       | `jdbc:mysql://localhost:3306/hisabkitab` |
+     | `SPRING_DATASOURCE_USERNAME`  | `your_username`                          |
+     | `SPRING_DATASOURCE_PASSWORD`  | `your_password`                          |
+   
+   - Click **OK** on all dialog boxes to save the changes.
+4. Reopen Eclipse IDE to integrate the changes.
+5. Run the main file as a Java application to start the backend server
+
    
