@@ -16,9 +16,14 @@ public class FriendRequestService {
 
 	@Autowired
 	private FriendRequestRepository friendRequestRepository;
+	
+	@Autowired
+	private EmailNotificationService emailNotificationService;
 
 	@Autowired
 	private UserService userService;
+	
+	
 
 	public FriendRequestResponse sendRequest(UserEntity sender, UserEntity receiver) {
 
@@ -43,17 +48,66 @@ public class FriendRequestService {
 	    friendRequest.setStatus("PENDING");
 
 	    FriendRequestEntity savedRequest = friendRequestRepository.save(friendRequest);
-	    return new FriendRequestResponse(FriendRequestStatus.REQUEST_SENT, savedRequest);
-	}
+	    String subjectText = sender.getFullName()+" has sent you a friend request.";
+		String emailBodyMessage = String.format("""
+        		        Hi %s,
 
+        Great news! You received a friend request from %s.
+
+		Accept the friend request on Hisab Kitab to build stronger connections and simplify expense management. 
+		Collaborate effortlessly, stay organized, and make managing and sharing expenses a breeze.
+
+        Log in now to start collaborating: https://hisab-kitab-business.netlify.app/
+
+        Cheers,  
+        The Hisab Kitab Team
+        """,
+				receiver.getFullName(), sender.getFullName());
+		
+	    
+	    if(emailNotificationService.sendAndAcceptFriendRequestNotification(receiver.getEmail(),subjectText, emailBodyMessage )) {
+	    	
+	    	return new FriendRequestResponse(FriendRequestStatus.REQUEST_SENT, savedRequest);
+	    }
+	    return new FriendRequestResponse(FriendRequestStatus.REQUEST_NOT_SENT, null);
+	    
+	    
+	    
+	}
 
 	public FriendRequestEntity acceptRequest(Long requestId) {
 		FriendRequestEntity request = friendRequestRepository.findById(requestId)
 				.orElseThrow(() -> new RuntimeException("Request not found"));
-		request.setStatus("ACCEPTED");
-		userService.addFriend(request.getSender(), request.getReceiver());
-		deleteRequest(requestId);
-		return request;
+		
+		var sender = request.getSender();
+		var receiver = request.getReceiver();
+		
+		String subjectText = receiver.getFullName()+" has accepted your friend request.";
+		String emailBodyMessage = String.format("""
+        		        Hi %s,
+
+        Great news! Your friend request to %s has been accepted.
+
+        You are now connected on Hisab Kitab, making it even easier to manage and share your expenses together. 
+
+        Log in now to start collaborating: https://hisab-kitab-business.netlify.app/
+
+        Cheers,  
+        The Hisab Kitab Team
+        """,
+				sender.getFullName(), receiver.getFullName());
+		
+	    
+	    if(emailNotificationService.sendAndAcceptFriendRequestNotification(sender.getEmail(),subjectText, emailBodyMessage )) {
+	    	request.setStatus("ACCEPTED");
+			userService.addFriend(sender, receiver);
+			deleteRequest(requestId);
+	    	return  request;
+	    }
+		
+		
+		
+		return null;
 	}
 
 	public FriendRequestEntity unsendRequest(Long requestId) {
