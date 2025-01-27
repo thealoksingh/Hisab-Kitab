@@ -64,7 +64,7 @@ public class EmailNotificationService {
 
             		
             	
-            		String signupUrl = "http://localhost:3000/signup"; // Replace with actual sign-up URL
+            		String signupUrl = "https://hisab-kitab-business.netlify.app/"; // Replace with actual sign-up URL
 
             		String invitationMessage = String.format(invitationTemplate,  signupUrl, senderName);
 
