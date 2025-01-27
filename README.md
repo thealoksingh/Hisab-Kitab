@@ -8,6 +8,9 @@ Hisab - Kitab is a simple and effective tool for managing personal and group exp
 - [Backend Details](#backend-details)
 - [Technologies Used](#technologies-used)
 - [How to run the backend](#how-to-run-the-backend)
+- [Members](#members)
+- [Rules for contribution](#rules-for-contribution)
+
 
 ## Features
 

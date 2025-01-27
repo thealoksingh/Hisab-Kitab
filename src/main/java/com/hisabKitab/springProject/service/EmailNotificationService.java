@@ -64,7 +64,7 @@ public class EmailNotificationService {
 
             		
             	
-            		String signupUrl = "http://localhost:3000/signup"; // Replace with actual sign-up URL
+            		String signupUrl = "https://hisab-kitab-business.netlify.app/"; // Replace with actual sign-up URL
 
             		String invitationMessage = String.format(invitationTemplate,  signupUrl, senderName);
 
@@ -87,7 +87,50 @@ public class EmailNotificationService {
         }
     }
 
-   
+    
+    public boolean sendAndAcceptFriendRequestNotification(String recipientEmail, String subjectText, String emailBodyMessage) {
+    	
+    	Properties properties = new Properties();
+    	properties.put("mail.smtp.host", "smtp.gmail.com");
+    	properties.put("mail.smtp.port", "587");
+    	properties.put("mail.smtp.auth", "true");
+    	properties.put("mail.smtp.starttls.enable", "true");
+    	
+    	
+    	// Set up the session
+    	Session session = Session.getInstance(properties, new Authenticator() {
+    		@Override
+    		protected PasswordAuthentication getPasswordAuthentication() {
+    			return new PasswordAuthentication(fromEmail, appPassword);
+    		}
+    	});
+    	
+    	try {
+    		// Create a message
+    		Message message = new MimeMessage(session);
+    		message.setFrom(new InternetAddress(fromEmail));
+    		message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(recipientEmail));
+    		message.setSubject(subjectText);
+
+    		System.out.println(emailBodyMessage);
+    		
+    		
+    		message.setText(emailBodyMessage);
+    		
+    		// Send the email
+    		Transport.send(message);
+    		
+    		// Log success
+    		System.out.println("Friend Request sent to: " + recipientEmail);
+    		
+    		return true;
+    	} catch (MessagingException e) {
+    		e.printStackTrace();
+    		System.out.println("Failed to send Friend Request to: " + recipientEmail);
+    		return false;
+    	}
+    }
+
     
     public String sendOtpNotification(String recipientEmail) {
         // SMTP server configuration
