@@ -60,6 +60,13 @@ public class UserService {
 		return "User registered successfully!";
 	}
 	
+	//Find if userEmail already exist
+	public boolean userExistByEmail(String email) {
+		System.out.println(userRepository.findByEmail(email));
+		return userRepository.findByEmail(email)!=null;
+		
+	}
+	
 	 public  String getRandomColor() {
 	        Random random = new Random();
 	        StringBuilder color = new StringBuilder("#");
