@@ -8,9 +8,6 @@ WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 
-# Copy .env file into the correct directory inside the container
-COPY etc/secrets/.env /etc/secrets/.env 
-
 # Install Maven and build the project
 RUN apt-get update && apt-get install -y maven \
     && mvn clean package -DskipTests \
