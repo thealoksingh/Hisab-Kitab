@@ -37,3 +37,4 @@ build/
 
 # for env
 .env
+*.class
