@@ -1,18 +1,28 @@
 package com.hisabKitab.springProject.controller;
 
+import java.util.Collections;
 import java.util.HashMap;
-import java.lang.String;
 import java.util.Map;
-import java.util.Set;
 
-import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.hisabKitab.springProject.dto.GetFriendListDto;
 import com.hisabKitab.springProject.dto.SignUpUserDto;
 import com.hisabKitab.springProject.entity.UserEntity;
+import com.hisabKitab.springProject.security.JwtTokenService;
 import com.hisabKitab.springProject.service.EmailNotificationService;
 import com.hisabKitab.springProject.service.UserService;
 
@@ -29,9 +39,12 @@ public class UserController {
 	@Autowired
 	private EmailNotificationService emailNotificationService;
 
+	@Autowired
+	private JwtTokenService jwtTokenService; // Inject JwtTokenService
+
 	// Login endpoint
 	@PostMapping("/login")
-	public ResponseEntity<UserEntity> login(@RequestParam String email, @RequestParam String password) {
+	public ResponseEntity<Map<String, Object>> login(@RequestParam String email, @RequestParam String password) {
 
 		System.out.println("login api called");
 		UserEntity user = userService.login(email, password);
@@ -40,10 +53,25 @@ public class UserController {
 
 		if (user != null) {
 			System.out.println(user.toString());
-			return ResponseEntity.status(HttpStatus.OK).body(user);
 
+			// Manually create an Authentication object for token generation
+			Authentication authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null,
+					Collections.emptyList());
+
+			// Generate JWT Token
+			String token = jwtTokenService.generateToken(authentication);
+			System.out.println(token);
+			// Construct response
+			Map<String, Object> response = new HashMap<>();
+			response.put("status", HttpStatus.OK.value());
+			response.put("message", "Login successful");
+			response.put("token", token);
+			response.put("user", user);
+
+			return ResponseEntity.ok(response);
 		} else {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(user);
+			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+					.body(Collections.singletonMap("message", "Invalid email or password"));
 		}
 	}
 
@@ -75,7 +103,7 @@ public class UserController {
 	public ResponseEntity<String> sendInviteEmail(@RequestParam("email") String recipientEmail,
 			@RequestParam("senderName") String senderName) {
 		var isUserExist = userService.userExistByEmail(recipientEmail);
-		
+
 		if (!isUserExist) {
 			if (emailNotificationService.sendInviteNotification(recipientEmail, senderName)) {
 				return ResponseEntity.ok("Invite Sent Successfully");
@@ -86,28 +114,26 @@ public class UserController {
 	}
 
 	@PostMapping("/sendOTP")
-	public ResponseEntity<String> sendOTPMail(@RequestParam("email") String recipientEmail, @RequestParam("type") String type) {
+	public ResponseEntity<String> sendOTPMail(@RequestParam("email") String recipientEmail,
+			@RequestParam("type") String type) {
 		boolean isUserExist = userService.userExistByEmail(recipientEmail);
-		
-		if((type.equals("forget-password")&&isUserExist)||(type.equals("sign-up")&&!isUserExist)){
-			
-				
+
+		if ((type.equals("forget-password") && isUserExist) || (type.equals("sign-up") && !isUserExist)) {
+
 			var otp = emailNotificationService.sendOtpNotification(recipientEmail);
-			
+
 			if (otp != null) {
 				return ResponseEntity.ok(otp);
 			}
-			}
-		else if((type.equals("forget-password")&& !isUserExist)) {
-			
+		} else if ((type.equals("forget-password") && !isUserExist)) {
+
 			return ResponseEntity.badRequest().body("User does not exist with the given email");
-		}
-		else if((type.equals("sign-up")&&isUserExist)) {
-			
+		} else if ((type.equals("sign-up") && isUserExist)) {
+
 			return ResponseEntity.badRequest().body("User already exist with given email");
 		}
 		return ResponseEntity.badRequest().body("OTP does not sent due to error");
-		
+
 	}
 
 	@DeleteMapping("/{userId}/friends/{friendId}")
