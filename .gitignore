@@ -33,7 +33,8 @@ build/
 .vscode/
 /target/
 /target/classes/
-
+**/target/
+/target
 
 # for env
 .env
