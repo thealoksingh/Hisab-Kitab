@@ -55,14 +55,16 @@ public class FriendTransactionController {
     
     
     @GetMapping("/getAllTransactionWithFriend")
-    public ResponseEntity<List<TransactionDetailsDto>> getAllTransactionWithFriend(@RequestParam("userId") Long userId, @RequestParam("friendId") Long friendId){
-    	var transactions = transactionService.getAllTransactionWithFriend(userId,friendId);
+    public ResponseEntity<List<TransactionDetailsDto>> getAllTransactionWithFriend( @RequestParam("friendId") Long friendId){
+		var user =  userService.getUserFromToken();
+
+		var transactions = transactionService.getAllTransactionWithFriend(user.getUserId(), friendId);
     	
     	List<TransactionDetailsDto> td = new ArrayList<>();
     	var lastClosingBalance = 0.0D;
     	
     	for(Transaction t:transactions) {
-    		if(t.getFromUserId()==userId) {
+    		if(t.getFromUserId() == user.getUserId()) {
     			lastClosingBalance += t.getAmount();
     			
     			td.add(new TransactionDetailsDto(t,lastClosingBalance));
