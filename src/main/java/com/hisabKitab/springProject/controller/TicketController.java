@@ -2,6 +2,8 @@ package com.hisabKitab.springProject.controller;
 
 import java.util.List;
 
+import com.hisabKitab.springProject.entity.UserEntity;
+import com.hisabKitab.springProject.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +28,9 @@ import com.hisabKitab.springProject.service.TicketService;
 public class TicketController {
 
     @Autowired
+    private UserService userService;
+
+    @Autowired
     private TicketService ticketService;
 
     @PostMapping
@@ -38,9 +43,10 @@ public class TicketController {
         return new ResponseEntity<>(createdTicket, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<Ticket>> getTicketsByUserId(@PathVariable Long userId) {
-        List<Ticket> tickets = ticketService.getTicketsByUserId(userId);
+    @GetMapping
+    public ResponseEntity<List<Ticket>> getTicketsByUserId() {
+        UserEntity user = userService.getUserFromToken();
+        List<Ticket> tickets = ticketService.getTicketsByUserId(user.getUserId());
         return ResponseEntity.ok(tickets);
     }
 

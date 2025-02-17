@@ -11,6 +11,11 @@ import java.util.List;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.hisabKitab.springProject.dto.GetFriendListDto;
@@ -25,6 +30,11 @@ import java.lang.String;
 @Service
 public class UserService {
 
+	private static final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+	@Autowired
+	AuthenticationManager authenticationManager;
+
 	@Autowired
 	private UserRepository userRepository;
 
@@ -34,12 +44,23 @@ public class UserService {
 	@Autowired
 	private FriendRequestCountService friendRequestCountService;
 
+
+//	method for finding Authenticated user from token
+
+	public UserEntity getUserFromToken(){
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String email = authentication.getName();
+		return getUserByEmail(email);
+	}
+
+
 	// Method to log in user by checking email and password
 	public UserEntity login(String email, String password) {
 		UserEntity user = userRepository.findByEmail(email);
-
+		System.out.println(user);
 		if (user != null) {
-			if (user.getPassword().equals(password)) {
+
+			if (passwordEncoder.matches(password,user.getPassword())) {
 				return user;
 			}
 		}
@@ -55,6 +76,7 @@ public class UserService {
 			return "User already exists with this email!";
 		}
 
+		newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
 		userRepository.save(new UserEntity(newUser.getFullName(), newUser.getEmail(), newUser.getPassword(),
 				newUser.getRole(), newUser.getContactNo(), getRandomColor()));
 		return "User registered successfully!";
@@ -104,7 +126,8 @@ public class UserService {
 	        throw new EntityNotFoundException("User with email " + email + " does not exist");
 	    }
 
-	    user.setPassword(newPassword);
+
+	    user.setPassword(passwordEncoder.encode(newPassword));
 	    userRepository.save(user);
 
 	    return "Password updated successfully!";
@@ -195,5 +218,10 @@ public class UserService {
 		
 		return userRepository.findByContactNo(recieverContactNo);
 	}
+
+	public  UserEntity getUserByEmail(String email){
+		return userRepository.getByEmail(email).orElseThrow(()-> new EntityNotFoundException("User not exist for this email : "+ email));
+	}
+
 
 }

@@ -4,20 +4,16 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.hisabKitab.springProject.dto.LoginRequestDto;
+import com.hisabKitab.springProject.dto.UpdatePasswordRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.*;
 
 import com.hisabKitab.springProject.dto.GetFriendListDto;
 import com.hisabKitab.springProject.dto.SignUpUserDto;
@@ -33,6 +29,8 @@ import jakarta.persistence.EntityNotFoundException;
 @CrossOrigin(origins = "*")
 public class UserController {
 
+
+
 	@Autowired
 	private UserService userService;
 
@@ -44,10 +42,10 @@ public class UserController {
 
 	// Login endpoint
 	@PostMapping("/login")
-	public ResponseEntity<Map<String, Object>> login(@RequestParam String email, @RequestParam String password) {
+	public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequestDto loginRequestDto) {
 
 		System.out.println("login api called");
-		UserEntity user = userService.login(email, password);
+		UserEntity user = userService.login(loginRequestDto.getEmail(), loginRequestDto.getPassword());
 
 //        Map<String, String> response = new HashMap<>();
 
@@ -86,12 +84,10 @@ public class UserController {
 		}
 	}
 
-	@GetMapping("/addfriend/{userId}")
-	public ResponseEntity<String> addFriend(@PathVariable("userId") Long userId,
-			@RequestParam("contactNo") String contactNo) {
-
-		var friend = userService.checkUserExistByContactNumber(userId, contactNo);
-
+	@GetMapping("/addfriend")
+	public ResponseEntity<String> addFriend(@RequestParam("contactNo") String contactNo) {
+		UserEntity user = userService.getUserFromToken();
+		var friend = userService.checkUserExistByContactNumber(user.getUserId(), contactNo);
 		if (friend != null) {
 			return ResponseEntity.ok("Friend Added Successfully");
 		}
@@ -136,17 +132,18 @@ public class UserController {
 
 	}
 
-	@DeleteMapping("/{userId}/friends/{friendId}")
-	public ResponseEntity<String> removeFriend(@PathVariable Long userId, @PathVariable Long friendId) {
-		userService.removeFriend(userId, friendId);
+	@DeleteMapping("/friends/{friendId}")
+	public ResponseEntity<String> removeFriend(@PathVariable Long friendId) {
+		UserEntity user = userService.getUserFromToken();
+		userService.removeFriend(user.getUserId(), friendId);
 		return ResponseEntity.ok("Friend removed successfully.");
 	}
 
-	@PostMapping("/update-password")
-	public ResponseEntity<String> updatePassword(@RequestParam("email") String email,
-			@RequestParam("newPassword") String newPassword) {
+	@PutMapping("/update-password")
+	public ResponseEntity<String> updatePassword(@RequestBody UpdatePasswordRequestDto updatePasswordRequestDto) {
 		try {
-			var response = userService.updatePassword(email, newPassword);
+			var user =  userService.getUserFromToken();
+			var response = userService.updatePassword(user.getEmail(), updatePasswordRequestDto.getPassWord());
 			return ResponseEntity.ok(response);
 		} catch (EntityNotFoundException e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -156,16 +153,16 @@ public class UserController {
 		}
 	}
 
-	@GetMapping("/getAllFriendList/{userId}")
-	public ResponseEntity<GetFriendListDto> getAllFriends(@PathVariable("userId") Long userId) {
-		var friendList = userService.getAllFriendList(userId);
-
-		var gfl = userService.getAllFriendListWithDetails(userId, friendList);
+	@GetMapping("/getAllFriendList")
+	public ResponseEntity<GetFriendListDto> getAllFriends() {
+		UserEntity user = userService.getUserFromToken();
+		var friendList = userService.getAllFriendList(user.getUserId());
+		var gfl = userService.getAllFriendListWithDetails(user.getUserId(), friendList);
 
 //    	GetFriendListDto gfl = new GetFriendListDto();
 
 		if (friendList == null) {
-			gfl.setMessage("User not Existed by Id = " + userId);
+			gfl.setMessage("User not Existed by Id = " + user.getUserId());
 			return ResponseEntity.status(400).body(gfl);
 		} else if (friendList.isEmpty()) {
 			gfl.setMessage("No friends are there in the List");

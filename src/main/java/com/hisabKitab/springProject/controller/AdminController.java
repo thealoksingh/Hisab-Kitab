@@ -27,12 +27,11 @@ public class AdminController {
 	  @Autowired
 	  private UserRepository userRepository;
 	  
-	  @DeleteMapping("/user/{userId}") 
-	    public ResponseEntity<String> deleteUserById(@PathVariable("userId") Long userId){
-	    	userService.deleteUserById(userId);
-	    	
-	    	return ResponseEntity.ok("User Deleted Succesfully");
-	    	
+	  @DeleteMapping("/user")
+	    public ResponseEntity<String> deleteUserById(){
+		  UserEntity user = userService.getUserFromToken();
+		  userService.deleteUserById(user.getUserId());
+		  return ResponseEntity.ok("User Deleted Succesfully");
 	    }
 	  
 	  @GetMapping("/getAllUser")

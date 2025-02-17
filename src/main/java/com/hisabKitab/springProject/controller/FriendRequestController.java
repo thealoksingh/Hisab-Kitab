@@ -2,6 +2,7 @@ package com.hisabKitab.springProject.controller;
 
 import java.util.List;
 
+import com.hisabKitab.springProject.entity.UserEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,8 +26,9 @@ public class FriendRequestController {
     
 
     @PostMapping("/send")
-    public ResponseEntity<String> sendRequest(@RequestParam Long senderId, @RequestParam String recieverContactNo) {
-    	var sender = userService.findUserById(senderId);
+    public ResponseEntity<String> sendRequest( @RequestParam String recieverContactNo) {
+        var user =  userService.getUserFromToken();
+    	var sender = userService.findUserById(user.getUserId());
     	var reciever = userService.findUserByContactNo(recieverContactNo);
     	if(sender==null || reciever==null) {
     		return ResponseEntity.badRequest().body("User not exist");
@@ -75,12 +77,14 @@ public class FriendRequestController {
     }
 
     @GetMapping("/pending")
-    public ResponseEntity<List<FriendRequestEntity>> getAllPendingRequests(@RequestParam Long receiverId) {
-        return ResponseEntity.ok(friendRequestService.getAllPendingRequests(receiverId));
+    public ResponseEntity<List<FriendRequestEntity>> getAllPendingRequests() {
+        var user =  userService.getUserFromToken();
+        return ResponseEntity.ok(friendRequestService.getAllPendingRequests(user.getUserId()));
     }
 
     @GetMapping("/sent")
     public ResponseEntity<List<FriendRequestEntity>> getAllSentRequests(@RequestParam Long senderId) {
-        return ResponseEntity.ok(friendRequestService.getAllSentRequests(senderId));
+        var user =  userService.getUserFromToken();
+        return ResponseEntity.ok(friendRequestService.getAllSentRequests(user.getUserId()));
     }
 }
