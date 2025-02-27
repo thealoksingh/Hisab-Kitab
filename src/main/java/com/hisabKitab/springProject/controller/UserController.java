@@ -1,23 +1,32 @@
 package com.hisabKitab.springProject.controller;
 
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
 
-import com.hisabKitab.springProject.dto.LoginRequestDto;
-import com.hisabKitab.springProject.dto.UpdatePasswordRequestDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.hisabKitab.springProject.dto.CommonResponseDto;
 import com.hisabKitab.springProject.dto.GetFriendListDto;
+import com.hisabKitab.springProject.dto.LoginRequestDto;
+import com.hisabKitab.springProject.dto.LoginResponseDto;
 import com.hisabKitab.springProject.dto.SignUpUserDto;
+import com.hisabKitab.springProject.dto.UpdatePasswordRequestDto;
 import com.hisabKitab.springProject.entity.UserEntity;
+import com.hisabKitab.springProject.exception.EntityAlreadyExistException;
+import com.hisabKitab.springProject.exception.UnAuthorizedException;
 import com.hisabKitab.springProject.security.JwtTokenService;
 import com.hisabKitab.springProject.service.EmailNotificationService;
 import com.hisabKitab.springProject.service.UserService;
@@ -28,8 +37,6 @@ import jakarta.persistence.EntityNotFoundException;
 @RequestMapping("/user")
 @CrossOrigin(origins = "*")
 public class UserController {
-
-
 
 	@Autowired
 	private UserService userService;
@@ -42,66 +49,59 @@ public class UserController {
 
 	// Login endpoint
 	@PostMapping("/login")
-	public ResponseEntity<Map<String, Object>> login(@RequestBody LoginRequestDto loginRequestDto) {
+	public ResponseEntity<CommonResponseDto<LoginResponseDto>> login(@RequestBody LoginRequestDto loginRequestDto)
+			throws UnAuthorizedException {
 
 		System.out.println("login api called");
 		UserEntity user = userService.login(loginRequestDto.getEmail(), loginRequestDto.getPassword());
 
 //        Map<String, String> response = new HashMap<>();
 
-		if (user != null) {
-			System.out.println(user.toString());
+		System.out.println(user.toString());
 
-			// Manually create an Authentication object for token generation
-			Authentication authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null,
-					Collections.emptyList());
+		// Manually create an Authentication object for token generation
+		Authentication authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null,
+				Collections.emptyList());
 
-			// Generate JWT Token
-			String token = jwtTokenService.generateToken(authentication);
-			System.out.println(token);
-			// Construct response
-			Map<String, Object> response = new HashMap<>();
-			response.put("status", HttpStatus.OK.value());
-			response.put("message", "Login successful");
-			response.put("token", token);
-			response.put("user", user);
+		// Generate JWT Token
+		String token = jwtTokenService.generateToken(authentication);
+		System.out.println(token);
+		// Construct response
 
-			return ResponseEntity.ok(response);
-		} else {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-					.body(Collections.singletonMap("message", "Invalid email or password"));
-		}
+		var response = new CommonResponseDto<>(HttpStatus.OK, "Login Successfull",
+				new LoginResponseDto(user.getFullName(), user.getContactNo(), token));
+
+		return ResponseEntity.ok(response);
+
 	}
 
 	// Signup endpoint
 	@PostMapping("/signup")
-	public ResponseEntity<String> signup(@RequestBody SignUpUserDto newUser) {
+	public ResponseEntity<String> signup(@RequestBody SignUpUserDto newUser) throws EntityAlreadyExistException {
 		String result = userService.signup(newUser);
-		if (result.equals("User registered successfully!")) {
-			return ResponseEntity.ok(result);
-		} else {
-			return ResponseEntity.status(400).body(result); // If user already exists
-		}
+
+		return ResponseEntity.ok(result);
 	}
 
-	@GetMapping("/addfriend")
-	public ResponseEntity<String> addFriend(@RequestParam("contactNo") String contactNo) {
-		UserEntity user = userService.getUserFromToken();
-		var friend = userService.checkUserExistByContactNumber(user.getUserId(), contactNo);
-		if (friend != null) {
-			return ResponseEntity.ok("Friend Added Successfully");
-		}
-		return ResponseEntity.status(400).body("User not existed with the contact no = " + contactNo); // If user not
-																										// exists
-	}
+	/*
+	 * @GetMapping("/addfriend") public ResponseEntity<String>
+	 * addFriend(@RequestParam("contactNo") String contactNo) { UserEntity user =
+	 * userService.getUserFromToken(); var friend =
+	 * userService.checkUserExistByContactNumber(user.getUserId(), contactNo); if
+	 * (friend != null) { return ResponseEntity.ok("Friend Added Successfully"); }
+	 * return
+	 * ResponseEntity.status(400).body("User not existed with the contact no = " +
+	 * contactNo); // If user not // exists }
+	 */
 
 	@PostMapping("/sendInvite")
-	public ResponseEntity<String> sendInviteEmail(@RequestParam("email") String recipientEmail,
-			@RequestParam("senderName") String senderName) {
+	public ResponseEntity<String> sendInviteEmail(@RequestParam("email") String recipientEmail) {
+
+		UserEntity user = userService.getUserFromToken();
 		var isUserExist = userService.userExistByEmail(recipientEmail);
 
 		if (!isUserExist) {
-			if (emailNotificationService.sendInviteNotification(recipientEmail, senderName)) {
+			if (emailNotificationService.sendInviteNotification(recipientEmail, user.getFullName())) {
 				return ResponseEntity.ok("Invite Sent Successfully");
 			}
 			return ResponseEntity.badRequest().body("Invite failed");
@@ -135,14 +135,14 @@ public class UserController {
 	@DeleteMapping("/friends/{friendId}")
 	public ResponseEntity<String> removeFriend(@PathVariable Long friendId) {
 		UserEntity user = userService.getUserFromToken();
-		userService.removeFriend(user.getUserId(), friendId);
+		userService.removeFriend(user, friendId);
 		return ResponseEntity.ok("Friend removed successfully.");
 	}
 
 	@PutMapping("/update-password")
 	public ResponseEntity<String> updatePassword(@RequestBody UpdatePasswordRequestDto updatePasswordRequestDto) {
 		try {
-			var user =  userService.getUserFromToken();
+			var user = userService.getUserFromToken();
 			var response = userService.updatePassword(user.getEmail(), updatePasswordRequestDto.getPassWord());
 			return ResponseEntity.ok(response);
 		} catch (EntityNotFoundException e) {
@@ -154,12 +154,12 @@ public class UserController {
 	}
 
 	@GetMapping("/getAllFriendList")
-	public ResponseEntity<GetFriendListDto> getAllFriends() {
+	public ResponseEntity<GetFriendListDto> getAllFriends() throws UnAuthorizedException {
 		UserEntity user = userService.getUserFromToken();
 		var friendList = userService.getAllFriendList(user.getUserId());
 		var gfl = userService.getAllFriendListWithDetails(user.getUserId(), friendList);
 
-//    	GetFriendListDto gfl = new GetFriendListDto();
+//    	GetFriendListDto gfl = new GetFriendListDto(); 
 
 		if (friendList == null) {
 			gfl.setMessage("User not Existed by Id = " + user.getUserId());

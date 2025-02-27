@@ -47,7 +47,7 @@ public class JwtSecurityConfig {
                 .csrf(csrf -> csrf.disable()) 
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/user/login","/user/signup", "/actuator", "/actuator/**",
+                        .requestMatchers("/api/ping","/user/login","/user/signup", "/user/sendOTP", "/actuator", "/actuator/**",
                         		 "/v3/api-docs/**",  // OpenAPI JSON
                                  "/swagger-ui/**",   // Swagger UI resources
                                  "/swagger-ui.html" ).permitAll()
@@ -75,6 +75,7 @@ public class JwtSecurityConfig {
         return new ProviderManager(authenticationProvider);
     }
 
+   
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails user = User.withUsername("in28minutes")
@@ -84,6 +85,7 @@ public class JwtSecurityConfig {
                                 .build();
         return new InMemoryUserDetailsManager(user);
     }
+   
 
     @Bean
     public JWKSource<SecurityContext> jwkSource() {

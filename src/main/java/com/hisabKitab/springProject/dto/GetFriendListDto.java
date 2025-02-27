@@ -1,7 +1,6 @@
 package com.hisabKitab.springProject.dto;
 
 import java.util.List;
-import java.util.Set;
 
 
 public class GetFriendListDto {

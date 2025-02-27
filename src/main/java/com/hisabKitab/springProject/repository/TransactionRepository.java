@@ -1,8 +1,8 @@
 package com.hisabKitab.springProject.repository;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -35,6 +35,10 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
             + "OR (from_user_id = ?2 AND to_user_id = ?1) "
             + "AND trans_date < ?3 ORDER BY trans_date", nativeQuery = true)
     List<Transaction> findAllTransactionsBeforeDate(Long userId, Long friendId, LocalDate beforeDate);
+    
+    @Query("SELECT t FROM Transaction t WHERE t.transId = :transId AND (t.fromUserId = :userId OR t.toUserId = :userId)")
+    Optional<Transaction> findByTransIdAndUserId(@Param("transId") Long transId, @Param("userId") Long userId);
+
 
 
 

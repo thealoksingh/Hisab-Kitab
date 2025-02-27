@@ -2,23 +2,18 @@ package com.hisabKitab.springProject.dto;
 
 public class TicketRequest {
 
-    private Long userId;
+
     private String title;
     private String description;
 	public TicketRequest() {
 		// TODO Auto-generated constructor stub
 	}
-	public TicketRequest(Long userId, String title, String description) {
-		this.userId = userId;
+	public TicketRequest( String title, String description) {
+		
 		this.title = title;
 		this.description = description;
 	}
-	public Long getUserId() {
-		return userId;
-	}
-	public void setUserId(Long userId) {
-		this.userId = userId;
-	}
+
 	public String getTitle() {
 		return title;
 	}
@@ -33,7 +28,7 @@ public class TicketRequest {
 	}
 	@Override
 	public String toString() {
-		return "TicketRequest [userId=" + userId + ", title=" + title + ", description=" + description + "]";
+		return "TicketRequest [title=" + title + ", description=" + description + "]";
 	}
 
     

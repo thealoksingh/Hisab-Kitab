@@ -4,13 +4,17 @@ import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
 import com.hisabKitab.springProject.entity.Balance;
 import com.hisabKitab.springProject.entity.Transaction;
+import com.hisabKitab.springProject.entity.UserEntity;
+import com.hisabKitab.springProject.exception.UnAuthorizedException;
 import com.hisabKitab.springProject.repository.BalanceRepository;
 import com.hisabKitab.springProject.repository.TransactionRepository;
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -25,8 +29,10 @@ public class TransactionService {
 	@Autowired
 	private BalanceService balanceService;
 
-	public Transaction saveTransaction(Transaction transaction) {
+	public Transaction saveTransaction(UserEntity user, Transaction transaction) throws UnAuthorizedException {
 
+		if(user.getUserId() != transaction.getFromUserId() && user.getUserId() != transaction.getToUserId()) throw new UnAuthorizedException("Transaction details is not related to authenticated user");
+		if(transaction.getCreatedBy() != transaction.getFromUserId() && transaction.getCreatedBy() != transaction.getToUserId()) throw new BadCredentialsException("Transaction Created by user is not involved in from or to user.");
 		var savedTransaction = transactionRepository.save(transaction);
 
 		balanceService.saveBalanceDetails(transaction);
@@ -35,8 +41,11 @@ public class TransactionService {
 		
 	}
 
-	public Transaction updateTransaction(Transaction transaction) {
+	public Transaction updateTransaction(UserEntity user, Transaction transaction) throws UnAuthorizedException {
 		
+		if(user.getUserId() != transaction.getFromUserId() && user.getUserId() != transaction.getToUserId()) throw new UnAuthorizedException("Transaction details is not related to authenticated user");
+		if(transaction.getCreatedBy() != transaction.getFromUserId() && transaction.getCreatedBy() != transaction.getToUserId()) throw new BadCredentialsException("Transaction Created by user is not involved in from or to user.");
+
 		var oldTransaction = transactionRepository.findById(transaction.getTransId());
 		if(oldTransaction.isPresent()) {
 			var netAmount = transaction.getAmount()-oldTransaction.get().getAmount();
@@ -47,10 +56,10 @@ public class TransactionService {
 				balanceService.updateBalance(transaction.getFromUserId(), transaction.getToUserId(),  (netAmount));
 				
 			}
+		} else {
+			throw new EntityNotFoundException("Transaction not found with ID: " + transaction.getTransId());
 		}
 		
-		
-
 		return transactionRepository.save(transaction);
 	}
 
@@ -61,10 +70,10 @@ public class TransactionService {
 	}
 	
 	@Transactional
-    public void deleteTransaction(Long transactionId) {
+    public void deleteTransaction(UserEntity user, Long transactionId) {
         // Fetch transaction
-        Transaction transaction = transactionRepository.findById(transactionId)
-                .orElseThrow(() -> new IllegalArgumentException("Transaction not found with ID: " + transactionId));
+        Transaction transaction = transactionRepository.findByTransIdAndUserId(transactionId, user.getUserId())
+                .orElseThrow(() -> new EntityNotFoundException("User's Transaction not found with ID: " + transactionId));
 
         Long fromUserId = transaction.getFromUserId();
         Long toUserId = transaction.getToUserId();
@@ -78,11 +87,9 @@ public class TransactionService {
     }
 						
 	 public List<Transaction> getTransactionsByDateRange(Long userId, Long friendId, LocalDate fromDate, LocalDate toDate) {
-	        // Assuming you're using JPA or a similar ORM, modify the query accordingly
 	        return transactionRepository.findTransactionsBetweenUsersAndDateRange(userId, friendId, fromDate, toDate);
 	    }
 	 public List<Balance> getTransactionsByUserId(Long userId) {
-	        // Assuming you're using JPA or a similar ORM, modify the query accordingly
 	        return (List<Balance>) balanceRepository.findByUserId(userId);
 	    }
 

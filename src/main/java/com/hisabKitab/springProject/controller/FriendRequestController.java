@@ -2,11 +2,18 @@ package com.hisabKitab.springProject.controller;
 
 import java.util.List;
 
-import com.hisabKitab.springProject.entity.UserEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 import com.hisabKitab.springProject.dto.FriendRequestResponse;
 import com.hisabKitab.springProject.entity.FriendRequestEntity;
@@ -27,8 +34,8 @@ public class FriendRequestController {
 
     @PostMapping("/send")
     public ResponseEntity<String> sendRequest( @RequestParam String recieverContactNo) {
-        var user =  userService.getUserFromToken();
-    	var sender = userService.findUserById(user.getUserId());
+        var sender =  userService.getUserFromToken();
+    	
     	var reciever = userService.findUserByContactNo(recieverContactNo);
     	if(sender==null || reciever==null) {
     		return ResponseEntity.badRequest().body("User not exist");
@@ -54,7 +61,8 @@ public class FriendRequestController {
     @PutMapping("/accept/{requestId}")
     public ResponseEntity<String> acceptRequest(@PathVariable Long requestId) {
     	
-    	var request = friendRequestService.acceptRequest(requestId);
+    	var user = userService.getUserFromToken();
+    	var request = friendRequestService.acceptRequest(user.getUserId(), requestId);
     	if(request==null) {
     		return ResponseEntity.badRequest().body("Request not exist");
     	}
@@ -63,16 +71,18 @@ public class FriendRequestController {
 
     @DeleteMapping("/unsend/{requestId}")
     public ResponseEntity<String> unsendRequest(@PathVariable Long requestId) {
-        var request = friendRequestService.unsendRequest(requestId);
-        if(request==null) {
-    		return ResponseEntity.badRequest().body("Request not exist");
-    	}
+    	var user = userService.getUserFromToken();
+    	
+        friendRequestService.unsendRequest(user.getUserId(), requestId);
+       
         return ResponseEntity.ok("Friend request unsent successfully");
     }
 
-    @DeleteMapping("/delete/{requestId}")
+    @DeleteMapping("/reject/{requestId}")
     public ResponseEntity<String> deleteRequest(@PathVariable Long requestId) {
-        friendRequestService.deleteRequest(requestId);
+    	var user = userService.getUserFromToken();
+
+        friendRequestService.deleteRequest(user.getUserId(),requestId);
         return ResponseEntity.ok("Friend request deleted successfully");
     }
 
@@ -83,7 +93,7 @@ public class FriendRequestController {
     }
 
     @GetMapping("/sent")
-    public ResponseEntity<List<FriendRequestEntity>> getAllSentRequests(@RequestParam Long senderId) {
+    public ResponseEntity<List<FriendRequestEntity>> getAllSentRequests() {
         var user =  userService.getUserFromToken();
         return ResponseEntity.ok(friendRequestService.getAllSentRequests(user.getUserId()));
     }

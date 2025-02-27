@@ -27,46 +27,45 @@ import com.hisabKitab.springProject.service.TicketService;
 @CrossOrigin(origins = "*")
 public class TicketController {
 
-    @Autowired
-    private UserService userService;
+	@Autowired
+	private UserService userService;
 
-    @Autowired
-    private TicketService ticketService;
+	@Autowired
+	private TicketService ticketService;
 
-    @PostMapping
-    public ResponseEntity<Ticket> createTicket(@RequestBody TicketRequest ticketRequest) {
-        Ticket createdTicket = ticketService.createTicket(
-                ticketRequest.getTitle(),
-                ticketRequest.getDescription(),
-                ticketRequest.getUserId()
-        );
-        return new ResponseEntity<>(createdTicket, HttpStatus.CREATED);
-    }
+	@PostMapping
+	public ResponseEntity<Ticket> createTicket(@RequestBody TicketRequest ticketRequest) {
+		var user = userService.getUserFromToken();
+		Ticket createdTicket = ticketService.createTicket(ticketRequest.getTitle(), ticketRequest.getDescription(),
+				user.getUserId());
+		return new ResponseEntity<>(createdTicket, HttpStatus.CREATED);
+	}
 
-    @GetMapping
-    public ResponseEntity<List<Ticket>> getTicketsByUserId() {
-        UserEntity user = userService.getUserFromToken();
-        List<Ticket> tickets = ticketService.getTicketsByUserId(user.getUserId());
-        return ResponseEntity.ok(tickets);
-    }
+	@GetMapping("/all")
+	public ResponseEntity<List<Ticket>> getTicketsByUserId() {
+		UserEntity user = userService.getUserFromToken();
+		List<Ticket> tickets = ticketService.getTicketsByUserId(user.getUserId());
+		return ResponseEntity.ok(tickets);
+	}
 
-    @PutMapping("/{ticketId}")
-    public ResponseEntity<Ticket> updateTicket(
-            @PathVariable Long ticketId,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String description) {
+	@PutMapping("/{ticketId}")
+	public ResponseEntity<Ticket> updateTicket(@PathVariable Long ticketId,
+			@RequestParam(required = false) String status, @RequestParam(required = false) String description) {
+		UserEntity user = userService.getUserFromToken();
+		Ticket updatedTicket = ticketService.updateTicket(user.getUserId(), ticketId, status, description);
+		return ResponseEntity.ok(updatedTicket);
+	}
 
-        Ticket updatedTicket = ticketService.updateTicket(ticketId, status, description);
-        return ResponseEntity.ok(updatedTicket);
-    }
-    
-    @DeleteMapping("/{ticketId}")
-    public ResponseEntity<String> deleteTicket(@PathVariable Long ticketId){
-    	var ticket = ticketService.deleteTicket(ticketId);
-    	
-    	if(ticket != null) {
-    		return new ResponseEntity<String>("Ticket deleted successfully", HttpStatus.OK);
-    	} return ResponseEntity.badRequest().body("ticked with id = "+ticketId +" not exists");
-    }
+	@DeleteMapping("/{ticketId}")
+	public ResponseEntity<String> deleteTicket(@PathVariable Long ticketId) {
+		
+		UserEntity user = userService.getUserFromToken();
+
+		var ticket = ticketService.deleteTicket(user.getUserId(),ticketId);
+
+		if (ticket != null) {
+			return new ResponseEntity<String>("Ticket deleted successfully", HttpStatus.OK);
+		}
+		return ResponseEntity.badRequest().body("ticked with id = " + ticketId + " not exists");
+	}
 }
-

@@ -1,12 +1,5 @@
 package com.hisabKitab.springProject.service;
 
-import com.hisabKitab.springProject.dto.GetFriendListDto;
-import com.hisabKitab.springProject.dto.UsersFriendEntityDto;
-import com.hisabKitab.springProject.entity.Transaction;
-import com.hisabKitab.springProject.entity.UserEntity;
-
-import com.lowagie.text.*;
-import com.lowagie.text.pdf.*;
 import java.awt.Color; // Import java.awt.Color
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,7 +10,23 @@ import java.util.Date;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
-import java.awt.Color;
+
+import com.hisabKitab.springProject.dto.GetFriendListDto;
+import com.hisabKitab.springProject.dto.UsersFriendEntityDto;
+import com.hisabKitab.springProject.entity.Transaction;
+import com.hisabKitab.springProject.entity.UserEntity;
+import com.lowagie.text.Chunk;
+import com.lowagie.text.Document;
+import com.lowagie.text.DocumentException;
+import com.lowagie.text.Element;
+import com.lowagie.text.Font;
+import com.lowagie.text.FontFactory;
+import com.lowagie.text.PageSize;
+import com.lowagie.text.Paragraph;
+import com.lowagie.text.Phrase;
+import com.lowagie.text.pdf.PdfPCell;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 @Service
 public class TransactionReportService {
 	 // Define custom colors using java.awt.Color
@@ -113,7 +122,7 @@ public class TransactionReportService {
                 // Format the Date object to the desired format
                 String formattedDate = outputFormat.format(date);
 //                String transactionDate = transactionDateFormat.format(transaction.getTransDate());
-                String transactionDate = transaction.getTransDate().toString();
+//                String transactionDate = transaction.getTransDate().toString();
                 addTableRow(entriesTable, formattedDate, transaction.getDescription(), String.format("%.2f", debitAmount), String.format("%.2f", creditAmount), font);
             }
 
@@ -282,7 +291,7 @@ public class TransactionReportService {
                
             
             
-                SimpleDateFormat transactionDateFormat = new SimpleDateFormat("dd MMM yyyy");
+//                SimpleDateFormat transactionDateFormat = new SimpleDateFormat("dd MMM yyyy");
                 // Parse the input string to a Date object
                  Date date = inputFormat.parse(friend.getLastTransactionDate().toString());
 

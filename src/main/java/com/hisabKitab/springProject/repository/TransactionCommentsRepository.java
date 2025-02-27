@@ -1,7 +1,7 @@
 package com.hisabKitab.springProject.repository;
 
 import java.util.List;
-
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -17,6 +17,9 @@ public interface TransactionCommentsRepository extends JpaRepository<Transaction
 
 	List<TransactionComment> findByTransaction_TransId(Long transactionId);
 	
+	 // Spring Data JPA will automatically generate the query
+    Optional<TransactionComment> findByCommentIdAndUser_UserId(Long commentId, Long userId);
+
 	
 
 }
