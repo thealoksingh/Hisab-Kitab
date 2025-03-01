@@ -1,24 +1,16 @@
 package com.hisabKitab.springProject.security;
 
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
-import java.security.interfaces.RSAPrivateKey;
-import java.security.interfaces.RSAPublicKey;
-import java.util.UUID;
+import javax.crypto.spec.SecretKeySpec;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -27,99 +19,70 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
-import com.nimbusds.jose.JOSEException;
-import com.nimbusds.jose.jwk.JWKSet;
-import com.nimbusds.jose.jwk.RSAKey;
-import com.nimbusds.jose.jwk.source.JWKSource;
-import com.nimbusds.jose.proc.SecurityContext;
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
 @Configuration
-@EnableWebSecurity
-@EnableMethodSecurity
 public class JwtSecurityConfig {
+
+    private final CustomUserDetailsService userDetailsService;
+
+    @Value("${jwt.secret}")
+    private String secret;
+
+    public JwtSecurityConfig(CustomUserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
+
+    @Autowired
+    private CustomAuthEntryPoint customAuthEntryPoint;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) 
+                .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/ping","/user/login","/user/signup", "/user/sendOTP", "/actuator", "/actuator/**",
-                        		 "/v3/api-docs/**",  // OpenAPI JSON
-                                 "/swagger-ui/**",   // Swagger UI resources
-                                 "/swagger-ui.html" ).permitAll()
+                        .requestMatchers("/api/ping", "/user/login", "/user/signup", "/user/sendOTP", "/actuator",
+                                "/actuator/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html")
+                        .permitAll()
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().authenticated()
-                )
-                .oauth2ResourceServer(oauth2 -> oauth2.jwt()) // Removed Customizer.withDefaults()
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(new BearerTokenAuthenticationEntryPoint())
-                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler())
-                )
-                .httpBasic(httpBasic -> httpBasic.disable()) // Disables basic auth
+                        .anyRequest().authenticated())
+                .oauth2ResourceServer(oauth2 -> oauth2
+                        .jwt()
+                        .and()
+                        .authenticationEntryPoint(customAuthEntryPoint)
+                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler()))
+                .httpBasic(httpBasic -> httpBasic.disable())
                 .build();
     }
 
-//    @Bean
-//    public PasswordEncoder passwordEncoder() {
-//        return new BCryptPasswordEncoder();
-//    }
-
     @Bean
-    public AuthenticationManager authenticationManager(UserDetailsService userDetailsService) {
-        var authenticationProvider = new DaoAuthenticationProvider();
-        authenticationProvider.setUserDetailsService(userDetailsService);
-        return new ProviderManager(authenticationProvider);
-    }
-
-   
-    @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user = User.withUsername("in28minutes")
-                                .password("{noop}dummy")
-                                .authorities("read")
-                                .roles("USER")
-                                .build();
-        return new InMemoryUserDetailsManager(user);
-    }
-   
-
-    @Bean
-    public JWKSource<SecurityContext> jwkSource() {
-        JWKSet jwkSet = new JWKSet(rsaKey());
-        return (jwkSelector, securityContext) -> jwkSelector.select(jwkSet);
+    public AuthenticationManager authManager() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return new org.springframework.security.authentication.ProviderManager(authProvider);
     }
 
     @Bean
-    public JwtEncoder jwtEncoder(JWKSource<SecurityContext> jwkSource) {
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public JwtEncoder jwtEncoder() {
+        var secretKey = new SecretKeySpec(secret.getBytes(), "HmacSHA256");
+        var jwkSource = new ImmutableSecret<>(secretKey);
         return new NimbusJwtEncoder(jwkSource);
     }
 
     @Bean
-    public JwtDecoder jwtDecoder() throws JOSEException {
-        return NimbusJwtDecoder.withPublicKey(rsaKey().toRSAPublicKey()).build();
-    }
-    
-    @Bean
-    public RSAKey rsaKey() {
-        KeyPair keyPair = keyPair();
-        return new RSAKey.Builder((RSAPublicKey) keyPair.getPublic())
-                .privateKey((RSAPrivateKey) keyPair.getPrivate())
-                .keyID("Hisab-Kitab")
-                .build();
-    }
-
-    @Bean
-    public KeyPair keyPair() {
-        try {
-            var keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-            keyPairGenerator.initialize(2048);
-            return keyPairGenerator.generateKeyPair();
-        } catch (Exception e) {
-            throw new IllegalStateException("Unable to generate an RSA Key Pair", e);
-        }
+    public JwtDecoder jwtDecoder() {
+        return NimbusJwtDecoder.withSecretKey(new SecretKeySpec(secret.getBytes(), "HmacSHA256")).build();
     }
 }

@@ -1,6 +1,6 @@
 package com.hisabKitab.springProject.exception;
 
-public class EntityAlreadyExistException extends Exception{
+public class EntityAlreadyExistException extends RuntimeException{
 	
 	
 	private static final long serialVersionUID = 1L;
