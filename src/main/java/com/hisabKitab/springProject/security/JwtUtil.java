@@ -2,31 +2,26 @@ package com.hisabKitab.springProject.security;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 import javax.crypto.SecretKey;
 
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import com.hisabKitab.springProject.exception.InvalidTokenException;
-import com.hisabKitab.springProject.exception.TokenExpiredException;
-
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureException;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.security.Keys;
-import jakarta.annotation.PostConstruct;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.stereotype.Component;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 
 @Component
 public class JwtUtil {
 
-	private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(JwtUtil.class);
 
     @Value("${jwt.secret}")
     private String secret;
@@ -44,12 +39,22 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(String username) {
+    public String generateToken(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+
+        String roles = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(""));
+
+                System.out.println("Roles in generate token: " + roles); // Debug
+
         return Jwts.builder()
-                .subject(username)
+                .issuer("HisabKitab")
+                .subject(String.valueOf(userDetails.getUser().getUserId())) // UserId as subject
+                .claim("roles", roles) // Setting roles as claims
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
-                .signWith(getSigningKey(), Jwts.SIG.HS256) // Explicitly set HS256
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -71,21 +76,8 @@ public class JwtUtil {
     }
 
     public String getUsername(String token) {
-        try {
-            logger.info("Extracting username from token");
-            return getClaims(token).getSubject();
-        } catch (ExpiredJwtException ex) {
-            logger.error("Token expired: {}", ex.getMessage());
-            throw new TokenExpiredException("Your session has expired. Please log in again.");
-        } catch (MalformedJwtException ex) {
-            logger.error("Invalid token format: {}", ex.getMessage());
-            throw new InvalidTokenException("Invalid token format. Please provide a valid token.");
-        } catch (io.jsonwebtoken.security.SecurityException ex) {
-            logger.error("Invalid token signature: {}", ex.getMessage());
-            throw new InvalidTokenException("Invalid token signature. Please provide a valid token.");
-        } catch (IllegalArgumentException ex) {
-            logger.error("Token is missing: {}", ex.getMessage());
-            throw new InvalidTokenException("Token is missing. Please provide a token.");
-        }
+
+        return getClaims(token).getSubject();
+
     }
 }

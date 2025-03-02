@@ -3,10 +3,12 @@ package com.hisabKitab.springProject.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,6 +27,7 @@ import com.hisabKitab.springProject.dto.LoginResponseDto;
 import com.hisabKitab.springProject.dto.UpdatePasswordRequestDto;
 import com.hisabKitab.springProject.entity.UserEntity;
 import com.hisabKitab.springProject.exception.UnAuthorizedException;
+import com.hisabKitab.springProject.security.CustomUserDetails;
 import com.hisabKitab.springProject.security.JwtUtil;
 import com.hisabKitab.springProject.service.EmailNotificationService;
 import com.hisabKitab.springProject.service.UserService;
@@ -50,30 +53,21 @@ public class UserController {
 	@Autowired
 	private JwtUtil jwtUtil;
 
-	// Login endpoint
 	@PostMapping("/login")
 	public ResponseEntity<CommonResponseDto<LoginResponseDto>> login(@RequestBody LoginRequestDto loginRequestDto)
 			throws UnAuthorizedException {
 
-		System.out.println("Login API called");
-
 		try {
-			// Authenticate the user
 			Authentication auth = authManager.authenticate(
 					new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword()));
 
-			System.out.println("After authentition");
-			// Fetch user from the database
-			UserEntity user = userService.getUserByEmail(auth.getName());
-			System.out.println("After user fetch");
+			CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal(); // Access user directly
+			System.out.println("Authorities from context inside login: " + auth.getAuthorities());
+			String token = jwtUtil.generateToken(auth);
 
-			// Generate JWT token
-			String token = jwtUtil.generateToken(auth.getName());
-			System.out.println("Generated Token: " + token);
-
-			// Construct response
 			var response = new CommonResponseDto<>(HttpStatus.OK, "Login Successful",
-					new LoginResponseDto(user.getFullName(), user.getContactNo(), token));
+					new LoginResponseDto(userDetails.getUser().getFullName(), userDetails.getUser().getContactNo(),
+							token));
 
 			return ResponseEntity.ok(response);
 
@@ -153,7 +147,11 @@ public class UserController {
 	}
 
 	@GetMapping("/getAllFriendList")
+	@PreAuthorize("hasRole('ROLE_USER')")
 	public ResponseEntity<GetFriendListDto> getAllFriends() throws UnAuthorizedException {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+		System.out.println(auth);
+		System.out.println("Authorities from context inside getAllFriendList: " + auth.getAuthorities());
 		UserEntity user = userService.getUserFromToken();
 		var friendList = userService.getAllFriendList(user.getUserId());
 		var gfl = userService.getAllFriendListWithDetails(user.getUserId(), friendList);

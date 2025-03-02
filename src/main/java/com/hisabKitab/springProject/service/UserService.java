@@ -45,8 +45,8 @@ public class UserService {
 
 	public UserEntity getUserFromToken() {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		String email = authentication.getName();
-		return getUserByEmail(email);
+		Long userId = Long.parseLong(authentication.getName());
+		return findUserById(userId);
 	}
 
 	// Method to log in user by checking email and password
@@ -183,14 +183,6 @@ public class UserService {
 
 		userFriendEntityList.sort(Comparator.comparing(UsersFriendEntityDto::getLastTransactionDate,
 				Comparator.nullsLast(Comparator.reverseOrder())));
-
-//		userFriendEntityList.sort((a, b) -> {
-//            if (a.getLastTransactionDate() == null) return 1; // null dates go to the end
-//            if (b.getLastTransactionDate() == null) return -1; // null dates go to the end
-//            return b.getLastTransactionDate().compareTo(a.getLastTransactionDate()); // Descending order
-//        });
-
-		System.out.println(userFriendEntityList);
 
 		var friendRequestCount = friendRequestCountService.friendRequestCount(userId);
 		return new GetFriendListDto("Friend List founded", userFriendEntityList, friendRequestCount);

@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -17,48 +18,72 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
+@EnableMethodSecurity
 @Configuration
 public class JwtSecurityConfig {
 
-    private final CustomUserDetailsService userDetailsService;
+    @Autowired
+    private CustomUserDetailsService userDetailsService;
 
     @Value("${jwt.secret}")
     private String secret;
-
-    public JwtSecurityConfig(CustomUserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
 
     @Autowired
     private CustomAuthEntryPoint customAuthEntryPoint;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
+            throws Exception {
         return http
-                .csrf(csrf -> csrf.disable())
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .csrf(csrf -> csrf.disable()) // Disable CSRF as it's not needed for stateless APIs
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
+                                                                                                              // session,
+                                                                                                              // as
+                                                                                                              // we're
+                                                                                                              // using
+                                                                                                              // JWT
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/ping", "/user/login", "/user/signup", "/user/sendOTP", "/actuator",
-                                "/actuator/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui/**",
-                                "/swagger-ui.html")
-                        .permitAll()
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .anyRequest().authenticated())
-                .oauth2ResourceServer(oauth2 -> oauth2
-                        .jwt()
-                        .and()
-                        .authenticationEntryPoint(customAuthEntryPoint)
-                        .accessDeniedHandler(new BearerTokenAccessDeniedHandler()))
-                .httpBasic(httpBasic -> httpBasic.disable())
+                                "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                        .permitAll() // Public endpoints
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow OPTIONS for CORS preflight
+
+                        // // Restrict access to /user/** paths to users with authority USER
+                        // .requestMatchers("/user/**").hasRole("ADMIN")
+
+                        // // Restrict access to /admin/** paths to users with authority ADMIN
+                        // .requestMatchers("/admin/**").hasAuthority("ADMIN")
+
+                        .anyRequest().authenticated()) // All other requests need to be authenticated
+                // filter for JWT
+                .authenticationProvider(authenticationProvider()) // validation
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Add custom
+                // .oauth2ResourceServer(oauth2 -> oauth2
+                // .jwt()) // Enable JWT authentication
+                // .exceptionHandling(exceptionHandling -> exceptionHandling
+                // .authenticationEntryPoint(customAuthEntryPoint) // Custom authentication
+                // entry point
+                // .accessDeniedHandler(new BearerTokenAccessDeniedHandler())) // Handle access
+                // denied for
+                // // insufficient privileges
+                .httpBasic(httpBasic -> httpBasic.disable()) // Disable HTTP basic authentication (we're using JWT)
                 .build();
+    }
+
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+
+        return authProvider;
     }
 
     @Bean
