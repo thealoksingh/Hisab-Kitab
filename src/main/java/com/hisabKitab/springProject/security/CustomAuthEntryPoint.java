@@ -19,7 +19,7 @@ public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
 
         String message = "Authentication failed.";
         int status = HttpServletResponse.SC_UNAUTHORIZED;
-
+                System.out.println("commence called");
         if (authException.getCause() instanceof io.jsonwebtoken.ExpiredJwtException) {
             message = "Token has expired. Please log in again.";
         } else if (authException.getCause() instanceof io.jsonwebtoken.MalformedJwtException) {

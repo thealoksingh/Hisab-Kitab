@@ -1,16 +1,27 @@
 package com.hisabKitab.springProject.dto;
 
 public class LoginResponseDto {
+	private Long userId;
 	private String fullName;
 	private String contactNo;
-	private String token;
+	private String accessToken;
+	private String refreshToken;
 	
 	public LoginResponseDto() {
 	}
-	public LoginResponseDto(String fullName, String contactNo, String token) {
+	public LoginResponseDto(Long userId, String fullName, String contactNo, String accessToken, String refreshToken) {
+		this.userId = userId;
 		this.fullName = fullName;
 		this.contactNo = contactNo;
-		this.token = token;
+		this.accessToken = accessToken;
+		this.refreshToken = refreshToken;
+	}
+
+	public Long getUserId() {
+		return userId;
+	}
+	public void setUserId(Long userId) {
+		this.userId = userId;
 	}
 	public String getFullName() {
 		return fullName;
@@ -24,15 +35,23 @@ public class LoginResponseDto {
 	public void setContactNo(String contactNo) {
 		this.contactNo = contactNo;
 	}
-	public String getToken() {
-		return token;
+	public String getAccessToken() {
+		return accessToken;
 	}
-	public void setToken(String token) {
-		this.token = token;
+	public void setAccessToken(String accessToken) {
+		this.accessToken = accessToken;
 	}
+	public String getRefreshToken() {
+		return refreshToken;
+	}
+	
+	public void setRefreshToken(String refreshToken) {
+		this.refreshToken = refreshToken;
+	}
+	
 	@Override
 	public String toString() {
-		return "LoginResponseDto [fullName=" + fullName + ", contactNo=" + contactNo + ", token=" + token + "]";
+		return "LoginResponseDto [fullName=" + fullName + ", contactNo=" + contactNo + ", accessToken=" + accessToken + ", refreshToken=" + refreshToken + "]";
 	}
 	
 

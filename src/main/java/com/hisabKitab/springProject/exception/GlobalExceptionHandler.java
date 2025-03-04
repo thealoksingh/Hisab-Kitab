@@ -93,4 +93,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 		var errorMessage = new CommonResponseDto<>(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong", null);
 		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessage);
 	}
+	@ExceptionHandler(TokenRefreshException.class)
+	public ResponseEntity<CommonResponseDto<Object>> handleTokenRefreshExceptions(TokenRefreshException exception) {
+		logger.error("Refresh token exception: {}", exception.getMessage());
+		var errorMessage = new CommonResponseDto<>(HttpStatus.UNAUTHORIZED,  exception.getMessage(), null);
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessage);
+	}
+
+
 }

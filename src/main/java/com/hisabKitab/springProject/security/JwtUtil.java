@@ -26,8 +26,8 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration}")
-    private long expiration;
+    @Value("${jwt.expirationInMs}")
+    private long expirationInMs;
 
     @PostConstruct
     public void testLogger() {
@@ -39,6 +39,19 @@ public class JwtUtil {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
+    public String generateTokenByIdAndRole(Long userId, String role) {
+        return Jwts.builder()
+                .issuer("HisabKitab")
+                .subject(String.valueOf(userId)) // UserId as subject
+                .claim("roles", role) // Setting roles as claims
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expirationInMs)) // 1 day in milliseconds
+                // .signWith(getSigningKey(),
+                // Jwts.SIG.HS256)
+                .signWith(getSigningKey(), Jwts.SIG.HS256) // Sign with the key
+                .compact();
+    }
+
     public String generateToken(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
 
@@ -46,14 +59,12 @@ public class JwtUtil {
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(""));
 
-                System.out.println("Roles in generate token: " + roles); // Debug
-
         return Jwts.builder()
                 .issuer("HisabKitab")
                 .subject(String.valueOf(userDetails.getUser().getUserId())) // UserId as subject
                 .claim("roles", roles) // Setting roles as claims
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + expiration))
+                .expiration(new Date(System.currentTimeMillis() + expirationInMs))
                 .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
     }

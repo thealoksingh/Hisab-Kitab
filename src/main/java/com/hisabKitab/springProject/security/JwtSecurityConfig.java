@@ -18,9 +18,10 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
-import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
@@ -37,6 +38,9 @@ public class JwtSecurityConfig {
     @Autowired
     private CustomAuthEntryPoint customAuthEntryPoint;
 
+    @Autowired
+    private CustomAccessDeniedHandler customAccessDeniedHandler;
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
             throws Exception {
@@ -49,7 +53,7 @@ public class JwtSecurityConfig {
                                                                                                               // using
                                                                                                               // JWT
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/ping", "/user/login", "/user/signup", "/user/sendOTP", "/actuator",
+                        .requestMatchers("/admin/**" ,"/api/ping", "/user/login", "/user/signup", "/user/refreshtoken", "/user/update-password", "/user/sendOTP", "/actuator",
                                 "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .permitAll() // Public endpoints
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow OPTIONS for CORS preflight
@@ -66,11 +70,9 @@ public class JwtSecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Add custom
                 // .oauth2ResourceServer(oauth2 -> oauth2
                 // .jwt()) // Enable JWT authentication
-                // .exceptionHandling(exceptionHandling -> exceptionHandling
-                // .authenticationEntryPoint(customAuthEntryPoint) // Custom authentication
-                // entry point
-                // .accessDeniedHandler(new BearerTokenAccessDeniedHandler())) // Handle access
-                // denied for
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(customAuthEntryPoint) // Custom authentication entry point
+                        .accessDeniedHandler(customAccessDeniedHandler)) // Handle access denied for
                 // // insufficient privileges
                 .httpBasic(httpBasic -> httpBasic.disable()) // Disable HTTP basic authentication (we're using JWT)
                 .build();
@@ -109,5 +111,18 @@ public class JwtSecurityConfig {
     @Bean
     public JwtDecoder jwtDecoder() {
         return NimbusJwtDecoder.withSecretKey(new SecretKeySpec(secret.getBytes(), "HmacSHA256")).build();
+    }
+
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOrigins("*")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedHeaders("*");
+            }
+        };
     }
 }

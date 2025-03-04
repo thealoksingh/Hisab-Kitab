@@ -36,20 +36,16 @@ public class JwtAuthenticationFilter extends org.springframework.web.filter.Once
             Claims claims = jwtUtil.getClaims(token);
             String username = claims.getSubject();
             String roles = claims.get("roles", String.class); // Get roles from JWT claims
-            System.out.println("Roles: " + roles); // Debug
+          
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 List<GrantedAuthority> authorities = List.of(roles).stream()
                         .map(SimpleGrantedAuthority::new)
                         .collect(Collectors.toList());
 
-                        System.out.println("authorities: " + authorities); // Debug
-                        // System.out.println(authorities);
-
                 UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, null, authorities);
                 authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                 SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		System.out.println("Authorities from context inside filter: " + auth.getAuthorities());
+                
 
             }
         }

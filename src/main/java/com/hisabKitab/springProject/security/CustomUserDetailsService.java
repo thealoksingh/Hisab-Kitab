@@ -21,8 +21,6 @@ public class CustomUserDetailsService implements UserDetailsService {
         UserEntity user = userRepository.getByEmail(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Email not found"));
 
-        System.out.println("Loaded user: " + user.getEmail() + ", Role: " + user.getRole()); // Debug
-
         return new CustomUserDetails(user);
     }
 

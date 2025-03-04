@@ -24,15 +24,22 @@ import com.hisabKitab.springProject.dto.CommonResponseDto;
 import com.hisabKitab.springProject.dto.GetFriendListDto;
 import com.hisabKitab.springProject.dto.LoginRequestDto;
 import com.hisabKitab.springProject.dto.LoginResponseDto;
+import com.hisabKitab.springProject.dto.SignUpUserDto;
+import com.hisabKitab.springProject.dto.TokenRefreshRequest;
+import com.hisabKitab.springProject.dto.TokenRefreshResponse;
 import com.hisabKitab.springProject.dto.UpdatePasswordRequestDto;
+import com.hisabKitab.springProject.entity.RefreshToken;
 import com.hisabKitab.springProject.entity.UserEntity;
+import com.hisabKitab.springProject.exception.TokenRefreshException;
 import com.hisabKitab.springProject.exception.UnAuthorizedException;
 import com.hisabKitab.springProject.security.CustomUserDetails;
 import com.hisabKitab.springProject.security.JwtUtil;
 import com.hisabKitab.springProject.service.EmailNotificationService;
+import com.hisabKitab.springProject.service.RefreshTokenService;
 import com.hisabKitab.springProject.service.UserService;
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/user")
@@ -45,6 +52,8 @@ public class UserController {
 	@Autowired
 	private EmailNotificationService emailNotificationService;
 
+	@Autowired
+	private RefreshTokenService refreshTokenService;
 	// @Autowired
 	// private JwtTokenService jwtTokenService; // Inject JwtTokenService
 
@@ -62,18 +71,58 @@ public class UserController {
 					new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword()));
 
 			CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal(); // Access user directly
-			System.out.println("Authorities from context inside login: " + auth.getAuthorities());
-			String token = jwtUtil.generateToken(auth);
 
-			var response = new CommonResponseDto<>(HttpStatus.OK, "Login Successful",
-					new LoginResponseDto(userDetails.getUser().getFullName(), userDetails.getUser().getContactNo(),
-							token));
+			String accessToken = jwtUtil.generateToken(auth);
+			System.out.println("Access Token: " + accessToken);
+			System.out.println(" userid = "+userDetails.getUser().getUserId());
 
+			String refreshToken = refreshTokenService.createRefreshToken(userDetails.getUser().getUserId()).getToken();
+			System.out.println("Refresh Token: " + refreshToken);
+			var response = new CommonResponseDto<>(HttpStatus.OK, "Login Successfull",
+					new LoginResponseDto(userDetails.getUser().getUserId() ,userDetails.getUser().getFullName(), userDetails.getUser().getContactNo(),
+					accessToken, refreshToken));
+			System.out.println("Response: " + response);
 			return ResponseEntity.ok(response);
 
 		} catch (BadCredentialsException e) {
 			throw new UnAuthorizedException("Invalid email or password");
 		}
+	}
+
+	@PostMapping("/refreshtoken")
+	public ResponseEntity<?> refreshtoken( @RequestBody TokenRefreshRequest request) {
+		String requestRefreshToken = request.getRefreshToken();
+		// var refreshToken = refreshTokenService.findByToken(requestRefreshToken)
+		// .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Invalid refresh Token"));
+
+		return refreshTokenService.findByToken(requestRefreshToken)
+				.map(refreshTokenService::verifyExpiration)
+				.map(RefreshToken::getUser)
+				.map(user -> {
+					String token = jwtUtil.generateTokenByIdAndRole(user.getUserId(), user.getRole());
+					return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken));
+				})
+				.orElseThrow(() -> new TokenRefreshException(requestRefreshToken,
+						"Refresh token is not in database!"));
+	}
+
+	// Signup endpoint
+	@PostMapping("/signup")
+	public ResponseEntity<String> signup(@RequestBody SignUpUserDto newUser) {
+		String result = userService.signup(newUser);
+		if (result.equals("User registered successfully!")) {
+			return ResponseEntity.ok(result);
+		} else {
+			return ResponseEntity.status(400).body(result); // If user already exists
+		}
+	}
+
+	@PostMapping("/signout")
+	public ResponseEntity<?> logoutUser() {
+		var user = userService.getUserFromToken();
+		Long userId = user.getUserId();
+		refreshTokenService.deleteByUserId(userId);
+		return ResponseEntity.ok(new CommonResponseDto<>(HttpStatus.OK, "Logout Successful", null));
 	}
 
 	/*
@@ -135,8 +184,8 @@ public class UserController {
 	@PutMapping("/update-password")
 	public ResponseEntity<String> updatePassword(@RequestBody UpdatePasswordRequestDto updatePasswordRequestDto) {
 		try {
-			var user = userService.getUserFromToken();
-			var response = userService.updatePassword(user.getEmail(), updatePasswordRequestDto.getPassWord());
+			
+			var response = userService.updatePassword(updatePasswordRequestDto.getEmail(), updatePasswordRequestDto.getPassWord());
 			return ResponseEntity.ok(response);
 		} catch (EntityNotFoundException e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -147,11 +196,9 @@ public class UserController {
 	}
 
 	@GetMapping("/getAllFriendList")
-	@PreAuthorize("hasRole('ROLE_USER')")
+	// @PreAuthorize("hasRole('ROLE_USER')")
 	public ResponseEntity<GetFriendListDto> getAllFriends() throws UnAuthorizedException {
-		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		System.out.println(auth);
-		System.out.println("Authorities from context inside getAllFriendList: " + auth.getAuthorities());
+
 		UserEntity user = userService.getUserFromToken();
 		var friendList = userService.getAllFriendList(user.getUserId());
 		var gfl = userService.getAllFriendListWithDetails(user.getUserId(), friendList);
@@ -164,7 +211,7 @@ public class UserController {
 		} else if (friendList.isEmpty()) {
 			gfl.setMessage("No friends are there in the List");
 			// gfl.setFriendList(friendList);
-			return ResponseEntity.status(400).body(gfl);
+			return ResponseEntity.ok(gfl);
 		}
 		gfl.setMessage("Friend List founded");
 		// gfl.setFriendList(friendList);
