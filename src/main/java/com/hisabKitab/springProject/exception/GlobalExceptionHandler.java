@@ -11,7 +11,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 import com.hisabKitab.springProject.dto.CommonResponseDto;
 
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.ServletException;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,11 +82,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	@ExceptionHandler(TokenExpiredException.class)
 	public ResponseEntity<CommonResponseDto<Object>> handleTokenExpiredException(TokenExpiredException exception) {
 
-		var errorMessage = new CommonResponseDto<>(HttpStatus.BAD_REQUEST, exception.getMessage(), null);
+		var errorMessage = new CommonResponseDto<>(HttpStatus.UNAUTHORIZED, exception.getMessage(), null);
 
 		logger.error(exception.getMessage());
 
-		return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessage);
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMessage);
 
 	}
 
@@ -97,7 +100,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 	public ResponseEntity<CommonResponseDto<Object>> handleTokenRefreshExceptions(TokenRefreshException exception) {
 		logger.error("Refresh token exception: {}", exception.getMessage());
 		var errorMessage = new CommonResponseDto<>(HttpStatus.UNAUTHORIZED,  exception.getMessage(), null);
-		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessage);
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMessage);
+	}
+	@ExceptionHandler(ExpiredJwtException.class)
+	public ResponseEntity<CommonResponseDto<Object>> handleJwtExpireExceptions(ExpiredJwtException exception) {
+		logger.error("Access token expired: {}", exception.getMessage());
+		var errorMessage = new CommonResponseDto<>(HttpStatus.UNAUTHORIZED,  exception.getMessage(), null);
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMessage);
+	}
+	@ExceptionHandler(ServletException.class)
+	public ResponseEntity<CommonResponseDto<Object>> handleServletExceptions(ServletException exception) {
+		logger.error("Access token expired: {}", exception.getMessage());
+		var errorMessage = new CommonResponseDto<>(HttpStatus.UNAUTHORIZED,  exception.getMessage(), null);
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(errorMessage);
 	}
 
 

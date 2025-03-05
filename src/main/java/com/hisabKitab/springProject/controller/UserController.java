@@ -3,12 +3,10 @@ package com.hisabKitab.springProject.controller;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +37,7 @@ import com.hisabKitab.springProject.service.RefreshTokenService;
 import com.hisabKitab.springProject.service.UserService;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.Valid;
+
 
 @RestController
 @RequestMapping("/user")
@@ -89,7 +87,7 @@ public class UserController {
 		}
 	}
 
-	@PostMapping("/refreshtoken")
+	@PostMapping("/refresh-token")
 	public ResponseEntity<?> refreshtoken( @RequestBody TokenRefreshRequest request) {
 		String requestRefreshToken = request.getRefreshToken();
 		// var refreshToken = refreshTokenService.findByToken(requestRefreshToken)
@@ -117,8 +115,8 @@ public class UserController {
 		}
 	}
 
-	@PostMapping("/signout")
-	public ResponseEntity<?> logoutUser() {
+	@DeleteMapping("/signout")
+	public ResponseEntity<CommonResponseDto<String>> logoutUser() {
 		var user = userService.getUserFromToken();
 		Long userId = user.getUserId();
 		refreshTokenService.deleteByUserId(userId);
@@ -198,7 +196,7 @@ public class UserController {
 	@GetMapping("/getAllFriendList")
 	// @PreAuthorize("hasRole('ROLE_USER')")
 	public ResponseEntity<GetFriendListDto> getAllFriends() throws UnAuthorizedException {
-
+		System.out.println("friend list called");
 		UserEntity user = userService.getUserFromToken();
 		var friendList = userService.getAllFriendList(user.getUserId());
 		var gfl = userService.getAllFriendListWithDetails(user.getUserId(), friendList);
@@ -215,6 +213,8 @@ public class UserController {
 		}
 		gfl.setMessage("Friend List founded");
 		// gfl.setFriendList(friendList);
+
+		System.out.println("friend list completed");
 		return ResponseEntity.ok(gfl);
 	}
 

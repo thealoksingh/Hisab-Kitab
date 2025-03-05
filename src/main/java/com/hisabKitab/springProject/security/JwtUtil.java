@@ -13,6 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
 
+import com.hisabKitab.springProject.exception.TokenExpiredException;
+
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -83,6 +85,7 @@ public class JwtUtil {
     }
 
     private boolean isTokenExpired(String token) {
+        
         return getClaims(token).getExpiration().before(new Date());
     }
 

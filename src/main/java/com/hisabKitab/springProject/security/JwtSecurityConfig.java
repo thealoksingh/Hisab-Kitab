@@ -1,5 +1,7 @@
 package com.hisabKitab.springProject.security;
 
+import java.util.List;
+
 import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,8 +22,9 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 
@@ -42,10 +45,23 @@ public class JwtSecurityConfig {
     private CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:3000")); // Frontend URL
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
             throws Exception {
         return http
-                .csrf(csrf -> csrf.disable()) // Disable CSRF as it's not needed for stateless APIs
+        .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Global CORS config
+        .csrf(csrf -> csrf.disable()) // Disable CSRF as it's not needed for stateless APIs
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
                                                                                                               // session,
                                                                                                               // as
@@ -53,7 +69,8 @@ public class JwtSecurityConfig {
                                                                                                               // using
                                                                                                               // JWT
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/admin/**" ,"/api/ping", "/user/login", "/user/signup", "/user/refreshtoken", "/user/update-password", "/user/sendOTP", "/actuator",
+                        .requestMatchers("/admin/**", "/api/ping", "/user/login", "/user/signup", "/user/refresh-token",
+                                "/user/update-password", "/user/sendOTP", "/actuator",
                                 "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .permitAll() // Public endpoints
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow OPTIONS for CORS preflight
@@ -66,6 +83,11 @@ public class JwtSecurityConfig {
 
                         .anyRequest().authenticated()) // All other requests need to be authenticated
                 // filter for JWT
+
+                // added for ngrok link
+                // .headers(headers -> headers.frameOptions(frameOptions ->
+                // frameOptions.disable()))
+
                 .authenticationProvider(authenticationProvider()) // validation
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Add custom
                 // .oauth2ResourceServer(oauth2 -> oauth2
@@ -75,6 +97,7 @@ public class JwtSecurityConfig {
                         .accessDeniedHandler(customAccessDeniedHandler)) // Handle access denied for
                 // // insufficient privileges
                 .httpBasic(httpBasic -> httpBasic.disable()) // Disable HTTP basic authentication (we're using JWT)
+
                 .build();
     }
 
@@ -113,16 +136,4 @@ public class JwtSecurityConfig {
         return NimbusJwtDecoder.withSecretKey(new SecretKeySpec(secret.getBytes(), "HmacSHA256")).build();
     }
 
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("*")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*");
-            }
-        };
-    }
 }

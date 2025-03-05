@@ -17,8 +17,8 @@ import com.hisabKitab.springProject.repository.UserRepository;
 
 @Service
 public class RefreshTokenService {
-  @Value("${hisab-kitab.app.jwtRefreshExpirationMonth}")
-  private Long refreshTokenDurationMonth;
+  @Value("${hisab-kitab.app.jwtRefreshExpirationDay}")
+  private Long refreshTokenDurationDays;
 
   @Autowired
   private RefreshTokenRepository refreshTokenRepository;
@@ -40,7 +40,7 @@ public class RefreshTokenService {
     }
     refreshToken = new RefreshToken();
     refreshToken.setUser(userRepository.findById(userId).get());
-    refreshToken.setExpiryDate(Instant.now().plus(refreshTokenDurationMonth * 30, ChronoUnit.DAYS));
+    refreshToken.setExpiryDate(Instant.now().plus(refreshTokenDurationDays * 1, ChronoUnit.DAYS));
     refreshToken.setToken(UUID.randomUUID().toString());
 
     refreshToken = refreshTokenRepository.save(refreshToken);

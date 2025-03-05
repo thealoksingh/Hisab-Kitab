@@ -1,12 +1,15 @@
 package com.hisabKitab.springProject.security;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +18,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,33 +29,52 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class JwtAuthenticationFilter extends org.springframework.web.filter.OncePerRequestFilter {
 
-    private final JwtUtil jwtUtil;
-
-    public JwtAuthenticationFilter(JwtUtil jwtUtil) {
-        this.jwtUtil = jwtUtil;
-    }
+    private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+    
+    @Autowired
+    private  JwtUtil jwtUtil;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        String token = extractTokenFromRequest(request);
-        if (token != null && jwtUtil.isTokenValid(token, jwtUtil.getUsername(token))) {
-            Claims claims = jwtUtil.getClaims(token);
-            String username = claims.getSubject();
-            String roles = claims.get("roles", String.class); // Get roles from JWT claims
-          
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                List<GrantedAuthority> authorities = List.of(roles).stream()
-                        .map(SimpleGrantedAuthority::new)
-                        .collect(Collectors.toList());
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+        try {
+            String token = extractTokenFromRequest(request);
+            if (token != null && jwtUtil.isTokenValid(token, jwtUtil.getUsername(token))) {
+                Claims claims = jwtUtil.getClaims(token);
+                String username = claims.getSubject();
+                String roles = claims.get("roles", String.class);
 
-                UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(username, null, authorities);
-                authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-                
+                if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    List<GrantedAuthority> authorities = Arrays.stream(roles.split(","))
+                            .map(SimpleGrantedAuthority::new)
+                            .collect(Collectors.toList());
 
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(username,
+                            null, authorities);
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }
             }
+            filterChain.doFilter(request, response);
+        } catch (ExpiredJwtException ex) {
+            setErrorResponse(response, "Token has expired.");
+        } catch (MalformedJwtException ex) {
+            setErrorResponse(response, "Invalid token.");
+        } catch (SignatureException ex) {
+            setErrorResponse(response, "Token signature is invalid.");
+        } catch (IllegalArgumentException ex) {
+            setErrorResponse(response, "Token is missing or malformed.");
+        } catch (Exception ex) {
+            setErrorResponse(response, "Unauthorized access.");
         }
-        filterChain.doFilter(request, response);
+
+        
+    }
+
+    private void setErrorResponse(HttpServletResponse response, String message) throws IOException {
+        response.setContentType("application/json");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.getWriter().write("{\"error\": \"" + message + "\"}");
     }
 
     private String extractTokenFromRequest(HttpServletRequest request) {

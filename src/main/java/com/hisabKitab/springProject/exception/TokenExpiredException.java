@@ -1,6 +1,9 @@
 package com.hisabKitab.springProject.exception;
 
-public class TokenExpiredException extends RuntimeException {
+import io.jsonwebtoken.JwtException;
+import jakarta.servlet.ServletException;
+
+public class TokenExpiredException extends ServletException {
     
     private static final long serialVersionUID = 1L;
 
