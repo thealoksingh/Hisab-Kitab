@@ -78,7 +78,7 @@ public class UserController {
 			System.out.println("Refresh Token: " + refreshToken);
 			var response = new CommonResponseDto<>(HttpStatus.OK, "Login Successfull",
 					new LoginResponseDto(userDetails.getUser().getUserId() ,userDetails.getUser().getFullName(), userDetails.getUser().getContactNo(),
-					accessToken, refreshToken));
+					accessToken, refreshToken, userDetails.getUser().getColorHexValue()));
 			System.out.println("Response: " + response);
 			return ResponseEntity.ok(response);
 

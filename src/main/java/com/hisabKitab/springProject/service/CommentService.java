@@ -37,7 +37,7 @@ public class CommentService {
 	        comment.setUser(user);
 	        comment.setTransaction(transaction);
 	        comment.setComment(commentRequest.getComment());
-	        comment.setCommentTime(LocalDateTime.now()); // Set current time
+            comment.setCommentTime(LocalDateTime.parse(commentRequest.getCommentTime())); // Set current time
 
 	        // Save the comment
 	        return transactionCommentsRepository.save(comment);

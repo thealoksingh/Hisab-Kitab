@@ -1,6 +1,5 @@
 package com.hisabKitab.springProject.exception;
 
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.ServletException;
 
 public class TokenExpiredException extends ServletException {

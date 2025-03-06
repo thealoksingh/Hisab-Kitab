@@ -203,7 +203,6 @@ public class TransactionReportService {
     
     private void addTableRow(PdfPTable entriesTable, int serialNo, String fullName, String closingBalance, String formattedDate,
 			Font font) {
-		// TODO Auto-generated method stub
     	 addTableCell(entriesTable, serialNo+".", font, Color.WHITE); // Use Color.WHITE
          addTableCell(entriesTable, fullName, font, Color.WHITE);
          var color = Double.parseDouble(closingBalance) >= 0d  ? new java.awt.Color(204, 235, 204): new java.awt.Color(255, 204, 224); // Custom red (#ffcce0)
@@ -217,7 +216,6 @@ public class TransactionReportService {
     
 
 	public byte[] generateWholeTransactionReport(GetFriendListDto gfl, String fullName) {
-		// TODO Auto-generated method stub
         try {
             Document document = new Document(PageSize.A4);
             ByteArrayOutputStream baos = new ByteArrayOutputStream();

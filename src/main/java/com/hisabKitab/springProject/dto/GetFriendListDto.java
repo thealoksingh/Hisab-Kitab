@@ -10,7 +10,6 @@ public class GetFriendListDto {
 	private Integer friendRequestCount;
 	
 	public GetFriendListDto() {
-		// TODO Auto-generated constructor 
 	}
 	public GetFriendListDto(String message, List<UsersFriendEntityDto> friendList) {
 		this.message = message;

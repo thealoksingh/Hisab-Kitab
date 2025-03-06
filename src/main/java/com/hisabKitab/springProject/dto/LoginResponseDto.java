@@ -6,15 +6,17 @@ public class LoginResponseDto {
 	private String contactNo;
 	private String accessToken;
 	private String refreshToken;
+	private String colorHexValue;
 	
 	public LoginResponseDto() {
 	}
-	public LoginResponseDto(Long userId, String fullName, String contactNo, String accessToken, String refreshToken) {
+	public LoginResponseDto(Long userId, String fullName, String contactNo, String accessToken, String refreshToken, String colorHexValue) {
 		this.userId = userId;
 		this.fullName = fullName;
 		this.contactNo = contactNo;
 		this.accessToken = accessToken;
 		this.refreshToken = refreshToken;
+		this.colorHexValue = colorHexValue;
 	}
 
 	public Long getUserId() {
@@ -48,11 +50,19 @@ public class LoginResponseDto {
 	public void setRefreshToken(String refreshToken) {
 		this.refreshToken = refreshToken;
 	}
-	
+
+	public String getColorHexValue() {
+		return colorHexValue;
+	}
+	public void setColorHexValue(String colorHexValue) {
+		this.colorHexValue = colorHexValue;
+	}
 	@Override
 	public String toString() {
-		return "LoginResponseDto [fullName=" + fullName + ", contactNo=" + contactNo + ", accessToken=" + accessToken + ", refreshToken=" + refreshToken + "]";
+		return "LoginResponseDto [userId=" + userId + ", fullName=" + fullName + ", contactNo=" + contactNo
+				+ ", accessToken=" + accessToken + ", refreshToken=" + refreshToken + ", colorHexValue=" + colorHexValue
+				+ "]";
 	}
 	
-
+	
 }

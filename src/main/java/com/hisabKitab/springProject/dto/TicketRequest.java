@@ -6,7 +6,6 @@ public class TicketRequest {
     private String title;
     private String description;
 	public TicketRequest() {
-		// TODO Auto-generated constructor stub
 	}
 	public TicketRequest( String title, String description) {
 		
