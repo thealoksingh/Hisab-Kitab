@@ -1,6 +1,7 @@
 package com.hisabKitab.springProject.service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -37,7 +38,8 @@ public class CommentService {
 	        comment.setUser(user);
 	        comment.setTransaction(transaction);
 	        comment.setComment(commentRequest.getComment());
-            comment.setCommentTime(LocalDateTime.parse(commentRequest.getCommentTime())); // Set current time
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy HH:mm:ss");
+            comment.setCommentTime(LocalDateTime.parse(commentRequest.getCommentTime(), formatter)); // Set current time
 
 	        // Save the comment
 	        return transactionCommentsRepository.save(comment);
