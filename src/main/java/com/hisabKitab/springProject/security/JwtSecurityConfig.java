@@ -47,21 +47,26 @@ public class JwtSecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:3000","https://hisab-kitab-business.netlify.app","*" )); // Frontend URL
+    
+        configuration.addAllowedOriginPattern("*"); // Allow all origins dynamically (fixes "*")
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
-
+        configuration.setExposedHeaders(List.of("Authorization", "Content-Type")); // Allow frontend to read JWT tokens
+        configuration.setAllowCredentials(true); // Allow cookies/auth headers
+    
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+    
         return source;
     }
+    
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter)
             throws Exception {
         return http
-        .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Global CORS config
-        .csrf(csrf -> csrf.disable()) // Disable CSRF as it's not needed for stateless APIs
+                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Ensure CORS is applied
+                .csrf(csrf -> csrf.disable()) // Disable CSRF as it's not needed for JWT
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless
                                                                                                               // session,
                                                                                                               // as
@@ -74,30 +79,13 @@ public class JwtSecurityConfig {
                                 "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
                         .permitAll() // Public endpoints
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow OPTIONS for CORS preflight
-
-                        // // Restrict access to /user/** paths to users with authority USER
-                        // .requestMatchers("/user/**").hasRole("ADMIN")
-
-                        // // Restrict access to /admin/** paths to users with authority ADMIN
-                        // .requestMatchers("/admin/**").hasAuthority("ADMIN")
-
                         .anyRequest().authenticated()) // All other requests need to be authenticated
-                // filter for JWT
-
-                // added for ngrok link
-                // .headers(headers -> headers.frameOptions(frameOptions ->
-                // frameOptions.disable()))
-
-                .authenticationProvider(authenticationProvider()) // validation
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Add custom
-                // .oauth2ResourceServer(oauth2 -> oauth2
-                // .jwt()) // Enable JWT authentication
+                .authenticationProvider(authenticationProvider()) // Custom authentication provider
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // JWT filter
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .authenticationEntryPoint(customAuthEntryPoint) // Custom authentication entry point
-                        .accessDeniedHandler(customAccessDeniedHandler)) // Handle access denied for
-                // // insufficient privileges
+                        .accessDeniedHandler(customAccessDeniedHandler)) // Handle access denied errors
                 .httpBasic(httpBasic -> httpBasic.disable()) // Disable HTTP basic authentication (we're using JWT)
-
                 .build();
     }
 
