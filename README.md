@@ -63,7 +63,25 @@ The backend is built with Spring Boot. It utilizes a layered architecture of Con
 
 ## Members
 
-
-
+- Alok Kumar
+- Jay Singh
+- Ravi Kumar
+- Anukrity Srivastava
+  
 ## Rules for contribution
+
+We welcome contributions from everyone! To ensure smooth collaboration, please follow these guidelines:
+
+1. **Fork the Repository**: Start by forking the project to your own GitHub account.
+2. **Create a Feature Branch**: Make your changes in a separate branch named descriptively, like feature/add-user-logging or bugfix/fix-login-issue.
+3. **Follow Code Standards**: Write clean, readable, and well-documented code. Follow the existing coding style of the project.
+4. **Commit Messages**: Write meaningful and concise commit messages that explain the changes you've made.
+5. **Pull Request (PR)**:
+    - Ensure your code is thoroughly tested before creating a PR.
+    - Link the relevant issue (if applicable) in your PR description.
+    - Include a short summary of your changes and their purpose.
+6. **Review Process**: Be open to feedback from maintainers and other contributors. Update your PR as needed based on review comments.
+7. **Respect and Collaboration**: Please be respectful in discussions and maintain a collaborative attitude.
+
+Note: Always pull the latest changes from the main branch before starting new work to avoid merge conflicts.
    
