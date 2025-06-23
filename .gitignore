@@ -32,13 +32,13 @@ build/
 ### VS Code ###
 .vscode/
 /target/
+/target
 /target/classes/
 **/target/
 /target
 
 # for env
 .env
-
 
 *.class
 
