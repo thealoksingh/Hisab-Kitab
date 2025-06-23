@@ -1,19 +1,18 @@
 package com.hisabKitab.springProject.dto;
 
 public class CommentRequestDto {
-    private Long userId; // ID of the user making the comment
+
     private Long transactionId; // ID of the transaction
     private String comment; // The actual comment text
+    private String commentTime;
+
+    public CommentRequestDto(Long transactionId, String comment, String commentTime) {
+        this.transactionId = transactionId;
+        this.comment = comment;
+        this.commentTime = commentTime;
+    }
 
     // Getters and Setters
-    public Long getUserId() {
-        return userId;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
-    }
-
     public Long getTransactionId() {
         return transactionId;
     }
@@ -29,4 +28,20 @@ public class CommentRequestDto {
     public void setComment(String comment) {
         this.comment = comment;
     }
+
+    public String getCommentTime() {
+        return commentTime;
+    }
+
+    public void setCommentTime(String commentTime) {
+        this.commentTime = commentTime;
+    }
+
+    @Override
+    public String toString() {
+        return "CommentRequestDto [transactionId=" + transactionId + ", comment=" + comment + ", commentTime="
+                + commentTime + "]";
+    }
+
+    
 }

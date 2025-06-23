@@ -1,6 +1,7 @@
 package com.hisabKitab.springProject.service;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +15,6 @@ import com.hisabKitab.springProject.entity.TransactionComment;
 import com.hisabKitab.springProject.entity.UserEntity;
 import com.hisabKitab.springProject.repository.TransactionCommentsRepository;
 import com.hisabKitab.springProject.repository.TransactionRepository;
-import com.hisabKitab.springProject.repository.UserRepository;
 
 import jakarta.persistence.EntityNotFoundException;
 
@@ -24,16 +24,12 @@ public class CommentService {
 	@Autowired
 	private TransactionCommentsRepository transactionCommentsRepository;
 	
-	@Autowired
-    private UserRepository userRepository;
-
     @Autowired
     private TransactionRepository transactionRepository;
 	
-	  public TransactionComment saveComment(CommentRequestDto commentRequest) {
+	  public TransactionComment saveComment(UserEntity user,CommentRequestDto commentRequest) {
 	        // Fetch the user and transaction from the repositories
-	        UserEntity user = userRepository.findById(commentRequest.getUserId())
-	                .orElseThrow(() -> new RuntimeException("User not found"));
+	       
 	        Transaction transaction = transactionRepository.findById(commentRequest.getTransactionId())
 	                .orElseThrow(() -> new RuntimeException("Transaction not found"));
 
@@ -42,18 +38,21 @@ public class CommentService {
 	        comment.setUser(user);
 	        comment.setTransaction(transaction);
 	        comment.setComment(commentRequest.getComment());
-	        comment.setCommentTime(LocalDateTime.now()); // Set current time
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d/M/yyyy HH:mm:ss");
+            comment.setCommentTime(LocalDateTime.parse(commentRequest.getCommentTime(), formatter)); // Set current time
 
 	        // Save the comment
 	        return transactionCommentsRepository.save(comment);
 	    }
 	
-	  public  List<CommentResponseDto> getCommentsByTransactionId(Long transactionId) {
+	  public  List<CommentResponseDto> getCommentsByTransactionId(Long userId,Long transactionId) {
+		  
+		  var transaction = transactionRepository.findByTransIdAndUserId(transactionId, userId).orElseThrow(()-> new EntityNotFoundException("Transaction not found."));
 		  
 		  List<CommentResponseDto> commentsList = new ArrayList<>();
 		  
 		  
-	        var comments =  transactionCommentsRepository.findByTransaction_TransId(transactionId);
+	        var comments =  transactionCommentsRepository.findByTransaction_TransId(transaction.getTransId());
 	        if(comments != null) {
 	        	
 	        	
@@ -67,14 +66,14 @@ public class CommentService {
 	        return null;
 	    }
 	  
-	  public TransactionComment getCommentById(Long commentId) {
-	        return transactionCommentsRepository.findById(commentId)
-	                .orElseThrow(() -> new EntityNotFoundException("Comment not found with ID: " + commentId));
+	  public TransactionComment getCommentByIdAndUserId( Long commentId,Long userId) {
+	        return transactionCommentsRepository.findByCommentIdAndUser_UserId(commentId, userId)
+	                .orElseThrow(() -> new EntityNotFoundException("Your Comment not found with ID: " + commentId));
 	    }
 
-	public void deleteById(Long commentId) {
-		var comment = getCommentById(commentId);
-		transactionCommentsRepository.deleteById(commentId);
+	public void deleteById(Long userId, Long commentId) {
+		var comment = getCommentByIdAndUserId(commentId, userId);
+		transactionCommentsRepository.deleteById(comment.getCommentId());
 		
 	}
 

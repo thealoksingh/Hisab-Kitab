@@ -19,7 +19,7 @@ import com.hisabKitab.springProject.dto.CommentRequestDto;
 import com.hisabKitab.springProject.dto.CommentResponseDto;
 import com.hisabKitab.springProject.entity.TransactionComment;
 import com.hisabKitab.springProject.service.CommentService;
-import com.hisabKitab.springProject.service.TransactionService;
+import com.hisabKitab.springProject.service.UserService;
 
 @RestController
 @RequestMapping("/user")
@@ -30,11 +30,14 @@ public class TransactionCommentController {
 	private CommentService commentService;
 	
 	@Autowired
-	private TransactionService transactionService;
+	private UserService userService;
+	
+
 	
 	@PostMapping("/transaction/comment/save")
 	public ResponseEntity<TransactionComment> saveComment(@RequestBody CommentRequestDto commentRequest) {
-        var newComment =  commentService.saveComment(commentRequest);
+		var user = userService.getUserFromToken();
+        var newComment =  commentService.saveComment(user, commentRequest);
         
         if(newComment!=null) {
         	return ResponseEntity.status(HttpStatus.CREATED).body(newComment);
@@ -44,9 +47,9 @@ public class TransactionCommentController {
 	@GetMapping("/transaction/getAllComments")
 	public ResponseEntity<List<CommentResponseDto>> getAllTransactionComments(@RequestParam("transId") long transId){
 		
-//			var transactransactionService.findTransactionById(transId);
-		
-		var comments = commentService.getCommentsByTransactionId(transId);
+//		var transactransactionService.findTransactionById(transId);
+		var user = userService.getUserFromToken();
+		var comments = commentService.getCommentsByTransactionId(user.getUserId(),transId);
 		
 		if(comments != null) {
 			return ResponseEntity.ok(comments);
@@ -55,8 +58,8 @@ public class TransactionCommentController {
 	
 	@DeleteMapping("/transaction/comment/{commentId}")
 	public ResponseEntity<String> deleteCommentById(@PathVariable("commentId")Long commentId){
-		
-		commentService.deleteById(commentId);
+		var user = userService.getUserFromToken();
+		commentService.deleteById(user.getUserId(), commentId);
 		
 		return ResponseEntity.ok("Comment Deleted Successfully");
 		

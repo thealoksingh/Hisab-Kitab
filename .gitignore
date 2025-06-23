@@ -35,10 +35,10 @@ build/
 /target
 /target/classes/
 **/target/
-
+/target
 
 # for env
 .env
 
-
 *.class
+

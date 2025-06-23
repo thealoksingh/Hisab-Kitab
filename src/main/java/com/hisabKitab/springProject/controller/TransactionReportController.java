@@ -2,7 +2,6 @@ package com.hisabKitab.springProject.controller;
 
 import java.io.IOException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,8 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hisabKitab.springProject.entity.Balance;
 import com.hisabKitab.springProject.entity.Transaction;
+import com.hisabKitab.springProject.exception.UnAuthorizedException;
 import com.hisabKitab.springProject.repository.TransactionRepository;
 import com.hisabKitab.springProject.service.TransactionReportService;
 import com.hisabKitab.springProject.service.TransactionService;
@@ -58,7 +57,6 @@ public class TransactionReportController {
     @GetMapping("/api/reports/friend-transaction")
     public ResponseEntity<byte[]> generateFriendTransactionReport(
         @RequestParam("friendId") Long friendId, 
-        @RequestParam("userId") Long userId,
         @RequestParam("fromDate") String fromDate,  // fromDate as String
         @RequestParam("toDate") String toDate       // toDate as String
     ) throws IOException {
@@ -67,15 +65,17 @@ public class TransactionReportController {
         LocalDate startDate = LocalDate.parse(fromDate);
         LocalDate endDate = LocalDate.parse(toDate);
 
-        // Get all transactions for the given user and friend within the specified date range
-        List<Transaction> transactions = transactionService.getTransactionsByDateRange(userId, friendId, startDate, endDate);
-
-        // Get friend details
+     // Get friend details
         var friend = userService.getUserById(friendId);
+        var user = userService.getUserFromToken();
+        
+        // Get all transactions for the given user and friend within the specified date range
+        List<Transaction> transactions = transactionService.getTransactionsByDateRange(user.getUserId(), friend.getUserId(), startDate, endDate);
+
         
 //        Get Report data
         
-        var reportData = getRunningBalanceBeforeDate(userId, friendId, endDate);
+        var reportData = getRunningBalanceBeforeDate(user.getUserId(), friendId, endDate);
 
         // Generate the report
         byte[] pdfData = reportService.generateFriendTransactionReport(transactions, friend, fromDate, toDate, reportData.getRunningBalance(), reportData.getTotaDebit(), reportData.getTotalCredit());
@@ -111,14 +111,14 @@ public class TransactionReportController {
     
     
     @GetMapping("/api/reports/whole-transaction")
-    public ResponseEntity<byte[]> generateWholeTransactionReport( @RequestParam ("userId") Long userId){
+    public ResponseEntity<byte[]> generateWholeTransactionReport() throws UnAuthorizedException{
     	
     	
     	  // Get user details
-        var user = userService.getUserById(userId);
-	     var friendList = userService.getAllFriendList(userId);
+    	var user = userService.getUserFromToken();
+	     var friendList = userService.getAllFriendList(user.getUserId());
     	
-    	 var gfl = userService.getAllFriendListWithDetails(userId, friendList);
+    	 var gfl = userService.getAllFriendListWithDetails(user.getUserId(), friendList);
     
     	 
 //        List<Balance> Balance = transactionService.getTransactionsByUserId(userId);

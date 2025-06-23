@@ -11,7 +11,6 @@ public class CommentResponseDto {
 	private String comments;
 	private LocalDateTime commentTime;
 	public CommentResponseDto() {
-		// TODO Auto-generated constructor stub
 	}
 	public CommentResponseDto(String userFullName, String comments, LocalDateTime commentTime) {
 		this.userFullName = userFullName;

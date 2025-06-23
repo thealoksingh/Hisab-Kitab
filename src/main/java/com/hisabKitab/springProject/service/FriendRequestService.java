@@ -11,6 +11,8 @@ import com.hisabKitab.springProject.entity.FriendRequestEntity;
 import com.hisabKitab.springProject.entity.UserEntity;
 import com.hisabKitab.springProject.repository.FriendRequestRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class FriendRequestService {
 
@@ -75,9 +77,9 @@ public class FriendRequestService {
 	    
 	}
 
-	public FriendRequestEntity acceptRequest(Long requestId) {
-		FriendRequestEntity request = friendRequestRepository.findById(requestId)
-				.orElseThrow(() -> new RuntimeException("Request not found"));
+	public FriendRequestEntity acceptRequest(Long userId,Long requestId) {
+		FriendRequestEntity request = friendRequestRepository.findByIdAndReceiver_UserId(requestId, userId)
+				.orElseThrow(() -> new EntityNotFoundException("User's Request not found"));
 		
 		var sender = request.getSender();
 		var receiver = request.getReceiver();
@@ -101,7 +103,7 @@ public class FriendRequestService {
 	    if(emailNotificationService.sendAndAcceptFriendRequestNotification(sender.getEmail(),subjectText, emailBodyMessage )) {
 	    	request.setStatus("ACCEPTED");
 			userService.addFriend(sender, receiver);
-			deleteRequest(requestId);
+			deleteRequest(userId,requestId);
 	    	return  request;
 	    }
 		
@@ -110,16 +112,20 @@ public class FriendRequestService {
 		return null;
 	}
 
-	public FriendRequestEntity unsendRequest(Long requestId) {
-		var request = friendRequestRepository.findById(requestId).orElse(null);
+	public void unsendRequest(Long userId, Long requestId) {
+		var request = friendRequestRepository.findByIdAndSender_UserId(requestId, userId).orElseThrow(()-> new EntityNotFoundException("User's Request not exist"));
 		if(request!=null) {
 			 friendRequestRepository.deleteById(requestId);
-		} return request;
-		
+		} 
+		System.out.println("friend request unsend succesffully");
 	}
 
-	public FriendRequestEntity deleteRequest(Long requestId) {
-		return unsendRequest(requestId);
+	public void deleteRequest(Long userId, Long requestId) {
+		var request = friendRequestRepository.findByIdAndReceiver_UserId(requestId, userId).orElseThrow(()-> new EntityNotFoundException("User's Request not exist"));
+		if(request!=null) {
+			 friendRequestRepository.deleteById(requestId);
+		}
+		System.out.println("friend request deleted succesffully");
 	}
 
 	public List<FriendRequestEntity> getAllPendingRequests(Long receiverId) {

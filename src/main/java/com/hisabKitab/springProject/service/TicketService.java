@@ -8,6 +8,8 @@ import org.springframework.stereotype.Service;
 import com.hisabKitab.springProject.entity.Ticket;
 import com.hisabKitab.springProject.repository.TicketRepository;
 
+import jakarta.persistence.EntityNotFoundException;
+
 @Service
 public class TicketService {
 
@@ -27,28 +29,28 @@ public class TicketService {
     	return ticketRepository.findByUserIdAndStatusNot(userId, "DELETED BY USER");
     }
 
-    public Ticket updateTicket(Long ticketId, String status, String description) {
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+    public Ticket updateTicket(Long userId, Long ticketId, String status, String description) {
+        Ticket ticket = ticketRepository.findByTicketIdAndUserId(ticketId,userId)
+                .orElseThrow(() -> new EntityNotFoundException("Ticket not found"));
 
         if (status != null) {
             ticket.setStatus(status);
         }
-        if (description != null) {
+        if (description != null && description.trim().equals("")) {
             ticket.setDescription(description);
         }
         return ticketRepository.save(ticket);
     }
 
 	
-	public Ticket deleteTicket(Long ticketId) {
-		var ticket = ticketRepository.findById(ticketId);
-		if(ticket.isPresent()) {
-			ticket.get().setStatus("DELETED BY USER");
-			ticketRepository.save(ticket.get());
-			return ticket.get();
-		}
-		return null;
+	public Ticket deleteTicket(Long userId, Long ticketId) {
+		 Ticket ticket = ticketRepository.findByTicketIdAndUserId(ticketId,userId)
+	                .orElseThrow(() -> new EntityNotFoundException("Ticket not found"));
+		
+			ticket.setStatus("DELETED BY USER");
+			ticketRepository.save(ticket);
+			return ticket;
+	
 	}
 }
 

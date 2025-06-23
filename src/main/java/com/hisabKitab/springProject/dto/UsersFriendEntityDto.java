@@ -1,6 +1,5 @@
 package com.hisabKitab.springProject.dto;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import com.hisabKitab.springProject.entity.UserEntity;

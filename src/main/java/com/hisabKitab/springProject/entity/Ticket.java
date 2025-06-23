@@ -31,7 +31,6 @@ public class Ticket {
     private LocalDateTime updatedDate;
 
 	public Ticket() {
-		// TODO Auto-generated constructor stub
 	}
 
 	public Ticket(Long userId, String issueTitle, String description, String status, String priority) {

@@ -91,10 +91,21 @@ public class UserEntity {
  	}
 
  	// Convenience method to remove a friend
- 	public void removeFriend(UserEntity friend) {
- 		this.friends.remove(friend);
- 		friend.getFriends().remove(this); // Ensure mutual removal
+ 	public boolean removeFriend(UserEntity friend) {
+ 		var res1 = this.friends.remove(friend);
+       
+        var res2 = friend.getFriends().remove(this); // Ensure mutual removal
+       
+        if (!res2 || !res1) {
+            return false;
+            
+        }
+ 		return res1==res2;
  	}
+    //Convience method to add check user is friend or not
+    public boolean isFriend(UserEntity friend) {
+        return this.friends.contains(friend);
+    }
 
     public Long getUserId() {
         return userId;

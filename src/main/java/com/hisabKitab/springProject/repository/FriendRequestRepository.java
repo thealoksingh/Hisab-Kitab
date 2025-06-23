@@ -1,6 +1,7 @@
 package com.hisabKitab.springProject.repository;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -16,4 +17,8 @@ public interface FriendRequestRepository extends JpaRepository<FriendRequestEnti
     List<FriendRequestEntity> findBySenderAndStatus(UserEntity sender, String status);
 
 	FriendRequestEntity findBySenderAndReceiver(UserEntity sender, UserEntity receiver);
+
+	Optional<FriendRequestEntity> findByIdAndReceiver_UserId(Long requestId, Long userId);
+
+	Optional<FriendRequestEntity> findByIdAndSender_UserId(Long requestId, Long userId);
 }

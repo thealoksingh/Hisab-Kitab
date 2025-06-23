@@ -1,22 +1,43 @@
 package com.hisabKitab.springProject.controller;
 
-import java.util.HashMap;
-import java.lang.String;
-import java.util.Map;
-import java.util.Set;
-
-import org.springframework.http.HttpStatus;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.hisabKitab.springProject.dto.CommonResponseDto;
 import com.hisabKitab.springProject.dto.GetFriendListDto;
+import com.hisabKitab.springProject.dto.LoginRequestDto;
+import com.hisabKitab.springProject.dto.LoginResponseDto;
 import com.hisabKitab.springProject.dto.SignUpUserDto;
+import com.hisabKitab.springProject.dto.TokenRefreshRequest;
+import com.hisabKitab.springProject.dto.TokenRefreshResponse;
+import com.hisabKitab.springProject.dto.UpdatePasswordRequestDto;
+import com.hisabKitab.springProject.entity.RefreshToken;
 import com.hisabKitab.springProject.entity.UserEntity;
+import com.hisabKitab.springProject.exception.TokenRefreshException;
+import com.hisabKitab.springProject.exception.UnAuthorizedException;
+import com.hisabKitab.springProject.security.CustomUserDetails;
+import com.hisabKitab.springProject.security.JwtUtil;
 import com.hisabKitab.springProject.service.EmailNotificationService;
+import com.hisabKitab.springProject.service.RefreshTokenService;
 import com.hisabKitab.springProject.service.UserService;
 
 import jakarta.persistence.EntityNotFoundException;
+
 
 @RestController
 @RequestMapping("/user")
@@ -29,22 +50,58 @@ public class UserController {
 	@Autowired
 	private EmailNotificationService emailNotificationService;
 
-	// Login endpoint
+	@Autowired
+	private RefreshTokenService refreshTokenService;
+	// @Autowired
+	// private JwtTokenService jwtTokenService; // Inject JwtTokenService
+
+	@Autowired
+	private AuthenticationManager authManager;
+	@Autowired
+	private JwtUtil jwtUtil;
+
 	@PostMapping("/login")
-	public ResponseEntity<UserEntity> login(@RequestParam String email, @RequestParam String password) {
+	public ResponseEntity<CommonResponseDto<LoginResponseDto>> login(@RequestBody LoginRequestDto loginRequestDto)
+			throws UnAuthorizedException {
 
-		System.out.println("login api called");
-		UserEntity user = userService.login(email, password);
+		try {
+			Authentication auth = authManager.authenticate(
+					new UsernamePasswordAuthenticationToken(loginRequestDto.getEmail(), loginRequestDto.getPassword()));
 
-//        Map<String, String> response = new HashMap<>();
+			CustomUserDetails userDetails = (CustomUserDetails) auth.getPrincipal(); // Access user directly
 
-		if (user != null) {
-			System.out.println(user.toString());
-			return ResponseEntity.status(HttpStatus.OK).body(user);
+			String accessToken = jwtUtil.generateToken(auth);
+			System.out.println("Access Token: " + accessToken);
+			System.out.println(" userid = "+userDetails.getUser().getUserId());
 
-		} else {
-			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(user);
+			String refreshToken = refreshTokenService.createRefreshToken(userDetails.getUser().getUserId()).getToken();
+			System.out.println("Refresh Token: " + refreshToken);
+			var response = new CommonResponseDto<>(HttpStatus.OK, "Login Successfull",
+					new LoginResponseDto(userDetails.getUser().getUserId() ,userDetails.getUser().getFullName(), userDetails.getUser().getContactNo(),
+					accessToken, refreshToken, userDetails.getUser().getColorHexValue()));
+			System.out.println("Response: " + response);
+			return ResponseEntity.ok(response);
+
+		} catch (BadCredentialsException e) {
+			throw new UnAuthorizedException("Invalid email or password");
 		}
+	}
+
+	@PostMapping("/refresh-token")
+	public ResponseEntity<?> refreshtoken( @RequestBody TokenRefreshRequest request) {
+		String requestRefreshToken = request.getRefreshToken();
+		// var refreshToken = refreshTokenService.findByToken(requestRefreshToken)
+		// .orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Invalid refresh Token"));
+
+		return refreshTokenService.findByToken(requestRefreshToken)
+				.map(refreshTokenService::verifyExpiration)
+				.map(RefreshToken::getUser)
+				.map(user -> {
+					String token = jwtUtil.generateTokenByIdAndRole(user.getUserId(), user.getRole());
+					return ResponseEntity.ok(new TokenRefreshResponse(token, requestRefreshToken));
+				})
+				.orElseThrow(() -> new TokenRefreshException(requestRefreshToken,
+						"Refresh token is not in database!"));
 	}
 
 	// Signup endpoint
@@ -58,26 +115,33 @@ public class UserController {
 		}
 	}
 
-	@GetMapping("/addfriend/{userId}")
-	public ResponseEntity<String> addFriend(@PathVariable("userId") Long userId,
-			@RequestParam("contactNo") String contactNo) {
-
-		var friend = userService.checkUserExistByContactNumber(userId, contactNo);
-
-		if (friend != null) {
-			return ResponseEntity.ok("Friend Added Successfully");
-		}
-		return ResponseEntity.status(400).body("User not existed with the contact no = " + contactNo); // If user not
-																										// exists
+	@DeleteMapping("/signout")
+	public ResponseEntity<CommonResponseDto<String>> logoutUser() {
+		var user = userService.getUserFromToken();
+		Long userId = user.getUserId();
+		refreshTokenService.deleteByUserId(userId);
+		return ResponseEntity.ok(new CommonResponseDto<>(HttpStatus.OK, "Logout Successful", null));
 	}
 
+	/*
+	 * @GetMapping("/addfriend") public ResponseEntity<String>
+	 * addFriend(@RequestParam("contactNo") String contactNo) { UserEntity user =
+	 * userService.getUserFromToken(); var friend =
+	 * userService.checkUserExistByContactNumber(user.getUserId(), contactNo); if
+	 * (friend != null) { return ResponseEntity.ok("Friend Added Successfully"); }
+	 * return
+	 * ResponseEntity.status(400).body("User not existed with the contact no = " +
+	 * contactNo); // If user not // exists }
+	 */
+
 	@PostMapping("/sendInvite")
-	public ResponseEntity<String> sendInviteEmail(@RequestParam("email") String recipientEmail,
-			@RequestParam("senderName") String senderName) {
+	public ResponseEntity<String> sendInviteEmail(@RequestParam("email") String recipientEmail) {
+
+		UserEntity user = userService.getUserFromToken();
 		var isUserExist = userService.userExistByEmail(recipientEmail);
-		
+
 		if (!isUserExist) {
-			if (emailNotificationService.sendInviteNotification(recipientEmail, senderName)) {
+			if (emailNotificationService.sendInviteNotification(recipientEmail, user.getFullName())) {
 				return ResponseEntity.ok("Invite Sent Successfully");
 			}
 			return ResponseEntity.badRequest().body("Invite failed");
@@ -86,41 +150,40 @@ public class UserController {
 	}
 
 	@PostMapping("/sendOTP")
-	public ResponseEntity<String> sendOTPMail(@RequestParam("email") String recipientEmail, @RequestParam("type") String type) {
+	public ResponseEntity<String> sendOTPMail(@RequestParam("email") String recipientEmail,
+			@RequestParam("type") String type) {
 		boolean isUserExist = userService.userExistByEmail(recipientEmail);
-		
-		if((type.equals("forget-password")&&isUserExist)||(type.equals("sign-up")&&!isUserExist)){
-			
-				
+
+		if ((type.equals("forget-password") && isUserExist) || (type.equals("sign-up") && !isUserExist)) {
+
 			var otp = emailNotificationService.sendOtpNotification(recipientEmail);
-			
+
 			if (otp != null) {
 				return ResponseEntity.ok(otp);
 			}
-			}
-		else if((type.equals("forget-password")&& !isUserExist)) {
-			
+		} else if ((type.equals("forget-password") && !isUserExist)) {
+
 			return ResponseEntity.badRequest().body("User does not exist with the given email");
-		}
-		else if((type.equals("sign-up")&&isUserExist)) {
-			
+		} else if ((type.equals("sign-up") && isUserExist)) {
+
 			return ResponseEntity.badRequest().body("User already exist with given email");
 		}
 		return ResponseEntity.badRequest().body("OTP does not sent due to error");
-		
+
 	}
 
-	@DeleteMapping("/{userId}/friends/{friendId}")
-	public ResponseEntity<String> removeFriend(@PathVariable Long userId, @PathVariable Long friendId) {
-		userService.removeFriend(userId, friendId);
+	@DeleteMapping("/friends/{friendId}")
+	public ResponseEntity<String> removeFriend(@PathVariable Long friendId) {
+		UserEntity user = userService.getUserFromToken();
+		userService.removeFriend(user, friendId);
 		return ResponseEntity.ok("Friend removed successfully.");
 	}
 
-	@PostMapping("/update-password")
-	public ResponseEntity<String> updatePassword(@RequestParam("email") String email,
-			@RequestParam("newPassword") String newPassword) {
+	@PutMapping("/update-password")
+	public ResponseEntity<String> updatePassword(@RequestBody UpdatePasswordRequestDto updatePasswordRequestDto) {
 		try {
-			var response = userService.updatePassword(email, newPassword);
+			
+			var response = userService.updatePassword(updatePasswordRequestDto.getEmail(), updatePasswordRequestDto.getPassWord());
 			return ResponseEntity.ok(response);
 		} catch (EntityNotFoundException e) {
 			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
@@ -130,24 +193,28 @@ public class UserController {
 		}
 	}
 
-	@GetMapping("/getAllFriendList/{userId}")
-	public ResponseEntity<GetFriendListDto> getAllFriends(@PathVariable("userId") Long userId) {
-		var friendList = userService.getAllFriendList(userId);
+	@GetMapping("/getAllFriendList")
+	// @PreAuthorize("hasRole('ROLE_USER')")
+	public ResponseEntity<GetFriendListDto> getAllFriends() throws UnAuthorizedException {
+		System.out.println("friend list called");
+		UserEntity user = userService.getUserFromToken();
+		var friendList = userService.getAllFriendList(user.getUserId());
+		var gfl = userService.getAllFriendListWithDetails(user.getUserId(), friendList);
 
-		var gfl = userService.getAllFriendListWithDetails(userId, friendList);
-
-//    	GetFriendListDto gfl = new GetFriendListDto();
+		// GetFriendListDto gfl = new GetFriendListDto();
 
 		if (friendList == null) {
-			gfl.setMessage("User not Existed by Id = " + userId);
+			gfl.setMessage("User not Existed by Id = " + user.getUserId());
 			return ResponseEntity.status(400).body(gfl);
 		} else if (friendList.isEmpty()) {
 			gfl.setMessage("No friends are there in the List");
-//    		gfl.setFriendList(friendList);
-			return ResponseEntity.status(400).body(gfl);
+			// gfl.setFriendList(friendList);
+			return ResponseEntity.ok(gfl);
 		}
 		gfl.setMessage("Friend List founded");
-//    	gfl.setFriendList(friendList);
+		// gfl.setFriendList(friendList);
+
+		System.out.println("friend list completed");
 		return ResponseEntity.ok(gfl);
 	}
 
