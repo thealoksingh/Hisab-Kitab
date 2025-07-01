@@ -61,7 +61,7 @@ public class UserService {
 	}
 
 	// Method to sign up a new user
-	public String signup(SignUpUserDto newUser) throws EntityAlreadyExistException {
+	public UserEntity signup(SignUpUserDto newUser) throws EntityAlreadyExistException {
 		UserEntity existingUser = userRepository.findByEmail(newUser.getEmail());
 
 		if (existingUser != null) {
@@ -70,9 +70,9 @@ public class UserService {
 		}
 
 		newUser.setPassword(passwordEncoder.encode(newUser.getPassword()));
-		userRepository.save(new UserEntity(newUser.getFullName(), newUser.getEmail(), newUser.getPassword(),
+		return userRepository.save(new UserEntity(newUser.getFullName(), newUser.getEmail(), newUser.getPassword(),
 				newUser.getRole(), newUser.getContactNo(), getRandomColor()));
-		return "User registered successfully!";
+		
 	}
 
 	// Find if userEmail already exist
