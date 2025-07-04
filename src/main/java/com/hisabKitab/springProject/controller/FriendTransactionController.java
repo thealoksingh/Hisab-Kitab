@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,12 +18,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hisabKitab.springProject.dto.CommonResponseDto;
 import com.hisabKitab.springProject.dto.CreateTransactionRequestDto;
 import com.hisabKitab.springProject.dto.TransactionDetailsDto;
 import com.hisabKitab.springProject.entity.Transaction;
 import com.hisabKitab.springProject.exception.UnAuthorizedException;
 import com.hisabKitab.springProject.service.TransactionService;
 import com.hisabKitab.springProject.service.UserService;
+import com.hisabKitab.springProject.utils.ResponseBuilder;
 
 @RestController
 @RequestMapping("/user")
@@ -36,7 +39,7 @@ public class FriendTransactionController {
 	private TransactionService transactionService;
 
 	@PostMapping("/friendTransactions")
-	public ResponseEntity<Transaction> saveTransaction(@RequestBody CreateTransactionRequestDto transactionDto) throws UnAuthorizedException {
+	public ResponseEntity<CommonResponseDto<Transaction>> saveTransaction(@RequestBody CreateTransactionRequestDto transactionDto) throws UnAuthorizedException {
 		var user = userService.getUserFromToken();
 		var transaction = new Transaction();
 		transaction.setAmount(transactionDto.getAmount());
@@ -48,22 +51,22 @@ public class FriendTransactionController {
 		
 		Transaction savedTransaction = transactionService.saveTransaction(user,transaction);
 
-		return ResponseEntity.ok(savedTransaction);
+		return ResponseBuilder.success(HttpStatus.CREATED, "New Transaction added.", savedTransaction);
 
 	}
 
 	@PutMapping("/updatefriendTransactions")
-	public ResponseEntity<Transaction> updateTransaction(@RequestBody Transaction transaction) throws UnAuthorizedException {
+	public ResponseEntity<CommonResponseDto<Transaction>> updateTransaction(@RequestBody Transaction transaction) throws UnAuthorizedException {
 		
 		var user = userService.getUserFromToken();
 		Transaction updatedTransaction = transactionService.updateTransaction(user,transaction);
 
-		return ResponseEntity.ok(updatedTransaction);
+		return ResponseBuilder.success(HttpStatus.OK, "Transaction updated successfully", updatedTransaction);
 
 	}
 
 	@GetMapping("/getAllTransactionWithFriend")
-	public ResponseEntity<List<TransactionDetailsDto>> getAllTransactionWithFriend(
+	public ResponseEntity<CommonResponseDto<List<TransactionDetailsDto>>> getAllTransactionWithFriend(
 			@RequestParam("friendId") Long friendId) {
 		var user = userService.getUserFromToken();
 
@@ -85,14 +88,14 @@ public class FriendTransactionController {
 		}
 		Collections.reverse(td);
 
-		return ResponseEntity.ok(td);
+		return ResponseBuilder.success(HttpStatus.OK, "Transaction retrieved successfully", td);
 	}
 
 	@DeleteMapping("/transaction/{transactionId}")
-	public ResponseEntity<String> deleteTransaction(@PathVariable Long transactionId) {
+	public ResponseEntity<CommonResponseDto<String>> deleteTransaction(@PathVariable Long transactionId) {
 		var user = userService.getUserFromToken();
 		transactionService.deleteTransaction(user,transactionId);
-		return ResponseEntity.ok("Transaction and related data deleted successfully.");
+		return ResponseBuilder.success(HttpStatus.OK, "Transaction and related data deleted successfully.", null);
 	}
 
 }
