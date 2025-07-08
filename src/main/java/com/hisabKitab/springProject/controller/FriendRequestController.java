@@ -15,10 +15,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hisabKitab.springProject.dto.CommonResponseDto;
 import com.hisabKitab.springProject.dto.FriendRequestResponse;
 import com.hisabKitab.springProject.entity.FriendRequestEntity;
 import com.hisabKitab.springProject.service.FriendRequestService;
 import com.hisabKitab.springProject.service.UserService;
+import com.hisabKitab.springProject.utils.ResponseBuilder;
 
 @RestController
 @RequestMapping("/user/friend-request")
@@ -33,12 +35,13 @@ public class FriendRequestController {
     
 
     @PostMapping("/send")
-    public ResponseEntity<String> sendRequest( @RequestParam String recieverContactNo) {
+    public ResponseEntity<CommonResponseDto<FriendRequestResponse>> sendRequest( @RequestParam String recieverContactNo) {
         var sender =  userService.getUserFromToken();
     	
     	var reciever = userService.findUserByContactNo(recieverContactNo);
     	if(sender==null || reciever==null) {
-    		return ResponseEntity.badRequest().body("User not exist");
+            return ResponseBuilder.failure(HttpStatus.BAD_REQUEST, "User not exist");
+
     	}
 
         FriendRequestResponse response = friendRequestService.sendRequest(sender, reciever);
@@ -46,55 +49,55 @@ public class FriendRequestController {
         switch (response.getStatus()) {
             case SELF_REQUEST_NOT_ALLOWED:
             	System.out.println("self request error");
-                return ResponseEntity.badRequest().body("You cannot send a friend request to yourself.");
+                return ResponseBuilder.failure(HttpStatus.BAD_REQUEST,"You cannot send a friend request to yourself.");
             case ALREADY_FRIENDS:
-                return ResponseEntity.badRequest().body("You are already friends.");
+                return ResponseBuilder.failure(HttpStatus.BAD_REQUEST,"You are already friends.");
             case REQUEST_ALREADY_SENT:
-                return ResponseEntity.badRequest().body("Friend request already sent.");
+                return ResponseBuilder.failure(HttpStatus.BAD_REQUEST,"Friend request already sent.");
             case REQUEST_SENT:
-                return ResponseEntity.ok("Friend request sent successfully!");
+                return ResponseBuilder.success(HttpStatus.OK,"Friend request sent successfully!", response);
             default:
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred.");
+                return ResponseBuilder.failure(HttpStatus.INTERNAL_SERVER_ERROR,"An unexpected error occurred.");
         }
     }
 
     @PutMapping("/accept/{requestId}")
-    public ResponseEntity<String> acceptRequest(@PathVariable Long requestId) {
-    	
+    public ResponseEntity<CommonResponseDto<FriendRequestEntity>> acceptRequest(@PathVariable Long requestId) {
+
     	var user = userService.getUserFromToken();
     	var request = friendRequestService.acceptRequest(user.getUserId(), requestId);
     	if(request==null) {
-    		return ResponseEntity.badRequest().body("Request not exist");
+    		return ResponseBuilder.failure(HttpStatus.BAD_REQUEST,"Request not exist");
     	}
-        return ResponseEntity.ok().body("Friend request accepted");
+        return ResponseBuilder.success(HttpStatus.OK,"Friend request accepted", request);
     }
 
     @DeleteMapping("/unsend/{requestId}")
-    public ResponseEntity<String> unsendRequest(@PathVariable Long requestId) {
+    public ResponseEntity<CommonResponseDto<String>> unsendRequest(@PathVariable Long requestId) {
     	var user = userService.getUserFromToken();
     	
         friendRequestService.unsendRequest(user.getUserId(), requestId);
        
-        return ResponseEntity.ok("Friend request unsent successfully");
+        return ResponseBuilder.success(HttpStatus.OK,"Friend request unsent successfully", null);
     }
 
     @DeleteMapping("/reject/{requestId}")
-    public ResponseEntity<String> deleteRequest(@PathVariable Long requestId) {
+    public ResponseEntity<CommonResponseDto<String>> deleteRequest(@PathVariable Long requestId) {
     	var user = userService.getUserFromToken();
 
         friendRequestService.deleteRequest(user.getUserId(),requestId);
-        return ResponseEntity.ok("Friend request deleted successfully");
+        return ResponseBuilder.success(HttpStatus.OK,"Friend request deleted successfully", null);
     }
 
     @GetMapping("/pending")
-    public ResponseEntity<List<FriendRequestEntity>> getAllPendingRequests() {
+    public ResponseEntity<CommonResponseDto<List<FriendRequestEntity>>> getAllPendingRequests() {
         var user =  userService.getUserFromToken();
-        return ResponseEntity.ok(friendRequestService.getAllPendingRequests(user.getUserId()));
+        return ResponseBuilder.success(HttpStatus.OK,"Pending friend requests retrieved successfully", friendRequestService.getAllPendingRequests(user.getUserId()));
     }
 
     @GetMapping("/sent")
-    public ResponseEntity<List<FriendRequestEntity>> getAllSentRequests() {
+    public ResponseEntity<CommonResponseDto<List<FriendRequestEntity>>> getAllSentRequests() {
         var user =  userService.getUserFromToken();
-        return ResponseEntity.ok(friendRequestService.getAllSentRequests(user.getUserId()));
+        return ResponseBuilder.success(HttpStatus.OK,"Sent friend requests retrieved successfully", friendRequestService.getAllSentRequests(user.getUserId()));
     }
 }

@@ -17,9 +17,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hisabKitab.springProject.dto.CommentRequestDto;
 import com.hisabKitab.springProject.dto.CommentResponseDto;
+import com.hisabKitab.springProject.dto.CommonResponseDto;
 import com.hisabKitab.springProject.entity.TransactionComment;
 import com.hisabKitab.springProject.service.CommentService;
 import com.hisabKitab.springProject.service.UserService;
+import com.hisabKitab.springProject.utils.ResponseBuilder;
 
 @RestController
 @RequestMapping("/user")
@@ -35,33 +37,33 @@ public class TransactionCommentController {
 
 	
 	@PostMapping("/transaction/comment/save")
-	public ResponseEntity<TransactionComment> saveComment(@RequestBody CommentRequestDto commentRequest) {
+	public ResponseEntity<CommonResponseDto<TransactionComment>> saveComment(@RequestBody CommentRequestDto commentRequest) {
 		var user = userService.getUserFromToken();
         var newComment =  commentService.saveComment(user, commentRequest);
         
         if(newComment!=null) {
-        	return ResponseEntity.status(HttpStatus.CREATED).body(newComment);
-        } return ResponseEntity.badRequest().body(null);
+			return ResponseBuilder.success(HttpStatus.CREATED, "Comment saved successfully", newComment);
+        } return ResponseBuilder.failure(HttpStatus.BAD_REQUEST, "Failed to save comment");
     }
 	
 	@GetMapping("/transaction/getAllComments")
-	public ResponseEntity<List<CommentResponseDto>> getAllTransactionComments(@RequestParam("transId") long transId){
-		
+	public ResponseEntity<CommonResponseDto<List<CommentResponseDto>>> getAllTransactionComments(@RequestParam("transId") long transId){
+
 //		var transactransactionService.findTransactionById(transId);
 		var user = userService.getUserFromToken();
 		var comments = commentService.getCommentsByTransactionId(user.getUserId(),transId);
 		
 		if(comments != null) {
-			return ResponseEntity.ok(comments);
-		} return ResponseEntity.badRequest().body(null);
+			return ResponseBuilder.success(HttpStatus.OK, "Comments retrieved successfully", comments);
+		} return ResponseBuilder.failure(HttpStatus.BAD_REQUEST, "Failed to retrieve comments");
 	}
 	
 	@DeleteMapping("/transaction/comment/{commentId}")
-	public ResponseEntity<String> deleteCommentById(@PathVariable("commentId")Long commentId){
+	public ResponseEntity<CommonResponseDto<String>> deleteCommentById(@PathVariable("commentId")Long commentId){
 		var user = userService.getUserFromToken();
 		commentService.deleteById(user.getUserId(), commentId);
-		
-		return ResponseEntity.ok("Comment Deleted Successfully");
+
+		return ResponseBuilder.success(HttpStatus.OK, "Comment Deleted Successfully", null);
 		
 	}
 
