@@ -108,10 +108,17 @@ public class UserController {
 
 	// Signup endpoint
 	@PostMapping("/signup")
-	public ResponseEntity<CommonResponseDto<String>> signup(@RequestBody SignUpUserDto newUser) {
+	public ResponseEntity<CommonResponseDto<LoginResponseDto>> signup(@RequestBody SignUpUserDto newUser) {
 		var createdUser = userService.signup(newUser);
 		if (createdUser != null) {
-			return ResponseBuilder.success(HttpStatus.OK, "User registered successfully!", null);
+			// Send welcome email
+			emailNotificationService.sendWelcomeEmail(createdUser.getEmail(), createdUser.getFullName());
+			// Create refresh token for the new user
+			String refreshToken = refreshTokenService.createRefreshToken(createdUser.getUserId()).getToken();
+			// Create access token for the new user
+			String accessToken = jwtUtil.generateTokenByIdAndRole(createdUser.getUserId(), createdUser.getRole());
+			var response = new LoginResponseDto(createdUser, accessToken, refreshToken);
+			return ResponseBuilder.success(HttpStatus.OK, "User registered successfully!", response);
 		} else {
 			return ResponseBuilder.failure(HttpStatus.BAD_REQUEST, "User already exists");
 		}

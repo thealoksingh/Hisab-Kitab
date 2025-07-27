@@ -194,6 +194,51 @@ public class EmailNotificationService {
         return String.valueOf(otp);
     }
 
+
+    public void sendWelcomeEmail(String email, String fullName) {
+       
+        Properties properties = new Properties();
+        properties.put("mail.smtp.host", "smtp.gmail.com");
+        properties.put("mail.smtp.port", "587");
+        properties.put("mail.smtp.auth", "true");
+        properties.put("mail.smtp.starttls.enable", "true");
+
+        // Set up the session
+        Session session = Session.getInstance(properties, new Authenticator() {
+            @Override
+            protected PasswordAuthentication getPasswordAuthentication() {
+                return new PasswordAuthentication(fromEmail, appPassword);
+            }
+        });
+
+        try {
+            // Create a message
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(fromEmail));
+            message.setRecipients(Message.RecipientType.TO, InternetAddress.parse(email));
+            message.setSubject("Welcome to Hisab-Kitab!");
+
+            String welcomeMessage = String.format("""
+            		Hi %s,
+
+            		Welcome to Hisab-Kitab! We are excited to have you on board.
+
+            		Best regards,
+            		The Hisab-Kitab Team
+            		""", fullName);
+
+            message.setText(welcomeMessage);
+
+            // Send the email
+            Transport.send(message);
+
+            System.out.println("Welcome email sent to: " + email);
+        } catch (MessagingException e) {
+            e.printStackTrace();
+            System.out.println("Failed to send welcome email to: " + email);
+        }
+    }
+
 	
 }
 

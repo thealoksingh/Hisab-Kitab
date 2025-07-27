@@ -34,10 +34,8 @@ public class TransactionCommentController {
 	@Autowired
 	private UserService userService;
 	
-
-	
 	@PostMapping("/transaction/comment/save")
-	public ResponseEntity<CommonResponseDto<TransactionComment>> saveComment(@RequestBody CommentRequestDto commentRequest) {
+	public ResponseEntity<CommonResponseDto<CommentResponseDto>> saveComment(@RequestBody CommentRequestDto commentRequest) {
 		var user = userService.getUserFromToken();
         var newComment =  commentService.saveComment(user, commentRequest);
         

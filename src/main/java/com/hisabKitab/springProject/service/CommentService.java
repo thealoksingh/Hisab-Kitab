@@ -27,7 +27,7 @@ public class CommentService {
     @Autowired
     private TransactionRepository transactionRepository;
 	
-	  public TransactionComment saveComment(UserEntity user,CommentRequestDto commentRequest) {
+	  public CommentResponseDto saveComment(UserEntity user,CommentRequestDto commentRequest) {
 	        // Fetch the user and transaction from the repositories
 	       
 	        Transaction transaction = transactionRepository.findById(commentRequest.getTransactionId())
@@ -42,7 +42,8 @@ public class CommentService {
             comment.setCommentTime(LocalDateTime.parse(commentRequest.getCommentTime(), formatter)); // Set current time
 
 	        // Save the comment
-	        return transactionCommentsRepository.save(comment);
+	        transactionCommentsRepository.save(comment);
+	        return new CommentResponseDto(comment.getCommentId(), user.getUserId(), transaction.getTransId(), user.getColorHexValue(), user.getFullName(), comment.getComment(), comment.getCommentTime());
 	    }
 	
 	  public  List<CommentResponseDto> getCommentsByTransactionId(Long userId,Long transactionId) {
@@ -57,7 +58,7 @@ public class CommentService {
 	        	
 	        	
 	        	for(TransactionComment tc:comments) {
-	        		commentsList.add(new CommentResponseDto(tc.getCommentId(), tc.getUser().getUserId(), tc.getUser().getColorHexValue() ,tc.getUser().getFullName(), tc.getComment(), tc.getCommentTime()));
+	        		commentsList.add(new CommentResponseDto(tc.getCommentId(), tc.getUser().getUserId(), transactionId, tc.getUser().getColorHexValue() ,tc.getUser().getFullName(), tc.getComment(), tc.getCommentTime()));
 	        	}
 	        	
 	        	return commentsList;

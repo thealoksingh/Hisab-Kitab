@@ -6,6 +6,7 @@ public class CommentResponseDto {
 	
 	private Long commentId;
 	private Long userId;
+	private Long transactionId;
 	private String colorHexValue;
 	private String userFullName;
 	private String comments;
@@ -17,12 +18,13 @@ public class CommentResponseDto {
 		this.comments = comments;
 		this.commentTime = commentTime;
 	}
-	
-	
-	public CommentResponseDto(Long commentId, Long userId, String colorHexValue, String userFullName, String comments,
+
+
+	public CommentResponseDto(Long commentId, Long userId, Long transactionId, String colorHexValue, String userFullName, String comments,
 			LocalDateTime commentTime) {
 		this.commentId = commentId;
 		this.userId = userId;
+		this.transactionId = transactionId;
 		this.colorHexValue = colorHexValue;
 		this.userFullName = userFullName;
 		this.comments = comments;
@@ -39,6 +41,12 @@ public class CommentResponseDto {
 	}
 	public void setUserId(Long userId) {
 		this.userId = userId;
+	}
+	public Long getTransactionId() {
+		return transactionId;
+	}
+	public void setTransactionId(Long transactionId) {
+		this.transactionId = transactionId;
 	}
 	public String getColorHexValue() {
 		return colorHexValue;
