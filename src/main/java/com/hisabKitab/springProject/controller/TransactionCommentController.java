@@ -22,47 +22,58 @@ import com.hisabKitab.springProject.entity.TransactionComment;
 import com.hisabKitab.springProject.service.CommentService;
 import com.hisabKitab.springProject.service.UserService;
 import com.hisabKitab.springProject.utils.ResponseBuilder;
+import org.springframework.kafka.core.KafkaTemplate;
 
 @RestController
 @RequestMapping("/user")
 @CrossOrigin(origins = "*")
 public class TransactionCommentController {
-	
+
 	@Autowired
 	private CommentService commentService;
-	
+
 	@Autowired
 	private UserService userService;
-	
-	@PostMapping("/transaction/comment/save")
-	public ResponseEntity<CommonResponseDto<CommentResponseDto>> saveComment(@RequestBody CommentRequestDto commentRequest) {
-		var user = userService.getUserFromToken();
-        var newComment =  commentService.saveComment(user, commentRequest);
-        
-        if(newComment!=null) {
-			return ResponseBuilder.success(HttpStatus.CREATED, "Comment saved successfully", newComment);
-        } return ResponseBuilder.failure(HttpStatus.BAD_REQUEST, "Failed to save comment");
-    }
-	
-	@GetMapping("/transaction/getAllComments")
-	public ResponseEntity<CommonResponseDto<List<CommentResponseDto>>> getAllTransactionComments(@RequestParam("transId") long transId){
 
-//		var transactransactionService.findTransactionById(transId);
+	@Autowired
+	private KafkaTemplate<String, CommentResponseDto> kafkaTemplate;
+
+	@PostMapping("/transaction/comment/save")
+	public ResponseEntity<CommonResponseDto<CommentResponseDto>> saveComment(
+			@RequestBody CommentRequestDto commentRequest) {
 		var user = userService.getUserFromToken();
-		var comments = commentService.getCommentsByTransactionId(user.getUserId(),transId);
-		
-		if(comments != null) {
-			return ResponseBuilder.success(HttpStatus.OK, "Comments retrieved successfully", comments);
-		} return ResponseBuilder.failure(HttpStatus.BAD_REQUEST, "Failed to retrieve comments");
+		var newComment = commentService.saveComment(user, commentRequest);
+
+		if (newComment != null) {
+			String topic = "transaction-comments-" + commentRequest.getTransactionId();
+			kafkaTemplate.send(topic, newComment); // Send to Kafka
+			return ResponseBuilder.success(HttpStatus.CREATED, "Comment saved successfully", newComment);
+		}
+
+		return ResponseBuilder.failure(HttpStatus.BAD_REQUEST, "Failed to save comment");
 	}
-	
+
+	@GetMapping("/transaction/getAllComments")
+	public ResponseEntity<CommonResponseDto<List<CommentResponseDto>>> getAllTransactionComments(
+			@RequestParam("transId") long transId) {
+
+		// var transactransactionService.findTransactionById(transId);
+		var user = userService.getUserFromToken();
+		var comments = commentService.getCommentsByTransactionId(user.getUserId(), transId);
+
+		if (comments != null) {
+			return ResponseBuilder.success(HttpStatus.OK, "Comments retrieved successfully", comments);
+		}
+		return ResponseBuilder.failure(HttpStatus.BAD_REQUEST, "Failed to retrieve comments");
+	}
+
 	@DeleteMapping("/transaction/comment/{commentId}")
-	public ResponseEntity<CommonResponseDto<String>> deleteCommentById(@PathVariable("commentId")Long commentId){
+	public ResponseEntity<CommonResponseDto<String>> deleteCommentById(@PathVariable("commentId") Long commentId) {
 		var user = userService.getUserFromToken();
 		commentService.deleteById(user.getUserId(), commentId);
 
 		return ResponseBuilder.success(HttpStatus.OK, "Comment Deleted Successfully", null);
-		
+
 	}
 
 }
