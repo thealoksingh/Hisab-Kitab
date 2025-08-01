@@ -18,114 +18,137 @@ public class FriendRequestService {
 
 	@Autowired
 	private FriendRequestRepository friendRequestRepository;
-	
+
 	@Autowired
 	private EmailNotificationService emailNotificationService;
 
 	@Autowired
 	private UserService userService;
-	
-	
+
+	@Autowired
+	private FriendRequestEventProducer eventProducer;
 
 	public FriendRequestResponse sendRequest(UserEntity sender, UserEntity receiver) {
 
-	    if (sender.getUserId().equals(receiver.getUserId())) {
-	        return new FriendRequestResponse(FriendRequestStatus.SELF_REQUEST_NOT_ALLOWED, null);
-	    }
+		if (sender.getUserId().equals(receiver.getUserId())) {
+			return new FriendRequestResponse(FriendRequestStatus.SELF_REQUEST_NOT_ALLOWED, null);
+		}
 
-	    for (UserEntity friend : sender.getFriends()) {
-	        if (friend.getUserId().equals(receiver.getUserId())) {
-	            return new FriendRequestResponse(FriendRequestStatus.ALREADY_FRIENDS, null);
-	        }
-	    }
+		for (UserEntity friend : sender.getFriends()) {
+			if (friend.getUserId().equals(receiver.getUserId())) {
+				return new FriendRequestResponse(FriendRequestStatus.ALREADY_FRIENDS, null);
+			}
+		}
 
-	    var existingRequest = friendRequestRepository.findBySenderAndReceiver(sender, receiver);
-	    if (existingRequest != null) {
-	        return new FriendRequestResponse(FriendRequestStatus.REQUEST_ALREADY_SENT, existingRequest);
-	    }
+		var existingRequest = friendRequestRepository.findBySenderAndReceiver(sender, receiver);
+		if (existingRequest != null) {
+			return new FriendRequestResponse(FriendRequestStatus.REQUEST_ALREADY_SENT, existingRequest);
+		}
 
-	    FriendRequestEntity friendRequest = new FriendRequestEntity();
-	    friendRequest.setSender(sender);
-	    friendRequest.setReceiver(receiver);
-	    friendRequest.setStatus("PENDING");
+		FriendRequestEntity friendRequest = new FriendRequestEntity();
+		friendRequest.setSender(sender);
+		friendRequest.setReceiver(receiver);
+		friendRequest.setStatus("PENDING");
 
-	    FriendRequestEntity savedRequest = friendRequestRepository.save(friendRequest);
-	    String subjectText = sender.getFullName()+" has sent you a friend request.";
+		FriendRequestEntity savedRequest = friendRequestRepository.save(friendRequest);
+
+		// Broadcast the friend request event
+		eventProducer.sendFriendRequestEvent(savedRequest);
+
+		// Send email notification
+		String subjectText = sender.getFullName() + " has sent you a friend request.";
 		String emailBodyMessage = String.format("""
-        		        Hi %s,
+				      		        Hi %s,
 
-        Great news! You received a friend request from %s.
+				      Great news! You received a friend request from %s.
 
-		Accept the friend request on Hisab Kitab to build stronger connections and simplify expense management. 
-		Collaborate effortlessly, stay organized, and make managing and sharing expenses a breeze.
+				Accept the friend request on Hisab Kitab to build stronger connections and simplify expense management.
+				Collaborate effortlessly, stay organized, and make managing and sharing expenses a breeze.
 
-        Log in now to start collaborating: https://hisab-kitab-business.netlify.app/
+				      Log in now to start collaborating: https://hisab-kitab-business.netlify.app/
 
-        Cheers,  
-        The Hisab Kitab Team
-        """,
+				      Cheers,
+				      The Hisab Kitab Team
+				      """,
 				receiver.getFullName(), sender.getFullName());
-		
-	    
-	    if(emailNotificationService.sendAndAcceptFriendRequestNotification(receiver.getEmail(),subjectText, emailBodyMessage )) {
-	    	
-	    	return new FriendRequestResponse(FriendRequestStatus.REQUEST_SENT, savedRequest);
-	    }
-	    return new FriendRequestResponse(FriendRequestStatus.REQUEST_NOT_SENT, null);
-	    
-	    
-	    
+
+		if (emailNotificationService.sendAndAcceptFriendRequestNotification(receiver.getEmail(), subjectText,
+				emailBodyMessage)) {
+
+			return new FriendRequestResponse(FriendRequestStatus.REQUEST_SENT, savedRequest);
+		}
+		return new FriendRequestResponse(FriendRequestStatus.REQUEST_NOT_SENT, null);
+
 	}
 
-	public FriendRequestEntity acceptRequest(Long userId,Long requestId) {
+	public FriendRequestEntity acceptRequest(Long userId, Long requestId) {
 		FriendRequestEntity request = friendRequestRepository.findByIdAndReceiver_UserId(requestId, userId)
 				.orElseThrow(() -> new EntityNotFoundException("User's Request not found"));
-		
+
 		var sender = request.getSender();
 		var receiver = request.getReceiver();
-		
-		String subjectText = receiver.getFullName()+" has accepted your friend request.";
+
+		String subjectText = receiver.getFullName() + " has accepted your friend request.";
 		String emailBodyMessage = String.format("""
-        		        Hi %s,
+						        Hi %s,
 
-        Great news! Your friend request to %s has been accepted.
+				Great news! Your friend request to %s has been accepted.
 
-        You are now connected on Hisab Kitab, making it even easier to manage and share your expenses together. 
+				You are now connected on Hisab Kitab, making it even easier to manage and share your expenses together.
 
-        Log in now to start collaborating: https://hisab-kitab-business.netlify.app/
+				Log in now to start collaborating: https://hisab-kitab-business.netlify.app/
 
-        Cheers,  
-        The Hisab Kitab Team
-        """,
+				Cheers,
+				The Hisab Kitab Team
+				""",
 				sender.getFullName(), receiver.getFullName());
-		
-	    
-	    if(emailNotificationService.sendAndAcceptFriendRequestNotification(sender.getEmail(),subjectText, emailBodyMessage )) {
-	    	request.setStatus("ACCEPTED");
+
+		if (emailNotificationService.sendAndAcceptFriendRequestNotification(sender.getEmail(), subjectText,
+				emailBodyMessage)) {
+			request.setStatus("ACCEPTED");
 			userService.addFriend(sender, receiver);
-			deleteRequest(userId,requestId);
-	    	return  request;
-	    }
-		
-		
-		
+
+			deleteRequest(userId, requestId);
+
+			// Notify the sender about the acceptance
+			// Broadcast the friend request event
+			eventProducer.sendFriendRequestEvent(request);
+
+			return request;
+		}
+
 		return null;
 	}
 
 	public void unsendRequest(Long userId, Long requestId) {
-		var request = friendRequestRepository.findByIdAndSender_UserId(requestId, userId).orElseThrow(()-> new EntityNotFoundException("User's Request not exist"));
-		if(request!=null) {
-			 friendRequestRepository.deleteById(requestId);
-		} 
+		var request = friendRequestRepository.findByIdAndSender_UserId(requestId, userId)
+				.orElseThrow(() -> new EntityNotFoundException("User's Request not exist"));
+		if (request != null) {
+			friendRequestRepository.deleteById(requestId);
+		}
 		System.out.println("friend request unsend succesffully");
+
+	
+		// Broadcast the friend request event
+		if (request != null) {
+			request.setStatus("UNSENT");
+			eventProducer.sendFriendRequestEvent(request);
+		}
 	}
 
 	public void deleteRequest(Long userId, Long requestId) {
-		var request = friendRequestRepository.findByIdAndReceiver_UserId(requestId, userId).orElseThrow(()-> new EntityNotFoundException("User's Request not exist"));
-		if(request!=null) {
-			 friendRequestRepository.deleteById(requestId);
+		var request = friendRequestRepository.findByIdAndReceiver_UserId(requestId, userId)
+				.orElseThrow(() -> new EntityNotFoundException("User's Request not exist"));
+		if (request != null) {
+			friendRequestRepository.deleteById(requestId);
 		}
 		System.out.println("friend request deleted succesffully");
+
+		// Broadcast the friend request event
+		if (request != null) {
+			request.setStatus("REJECTED");
+			eventProducer.sendFriendRequestEvent(request);
+		}
 	}
 
 	public List<FriendRequestEntity> getAllPendingRequests(Long receiverId) {

@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.hisabKitab.springProject.dto.CommentResponseDto;
+import com.hisabKitab.springProject.entity.FriendRequestEntity;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -36,10 +37,28 @@ public class KafkaConsumerConfig {
     }
 
     @Bean
+    public ConsumerFactory<String, FriendRequestEntity> friendRequestConsumerFactory() {
+        JsonDeserializer<FriendRequestEntity> deserializer = new JsonDeserializer<>(FriendRequestEntity.class);
+        deserializer.addTrustedPackages("*");
+        Map<String, Object> config = new HashMap<>();
+        config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        config.put(ConsumerConfig.GROUP_ID_CONFIG, "friend-request-group");
+        config.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        config.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, deserializer);
+        return new DefaultKafkaConsumerFactory<>(config, new StringDeserializer(), deserializer);
+    }
+
+    @Bean
     public ConcurrentKafkaListenerContainerFactory<String, CommentResponseDto> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, CommentResponseDto> factory =
-                new ConcurrentKafkaListenerContainerFactory<>();
+        ConcurrentKafkaListenerContainerFactory<String, CommentResponseDto> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
+        return factory;
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, FriendRequestEntity> friendRequestKafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, FriendRequestEntity> factory = new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(friendRequestConsumerFactory());
         return factory;
     }
 }
