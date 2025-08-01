@@ -37,6 +37,11 @@ public class UserEntity {
     @Column(unique = true)
     private String contactNo;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<Notification> notifications;
+
+
     @ManyToMany
     @JoinTable(name = "friendship",
             joinColumns = @JoinColumn(name = "user_id"),
