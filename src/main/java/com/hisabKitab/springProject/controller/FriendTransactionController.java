@@ -98,4 +98,11 @@ public class FriendTransactionController {
 		return ResponseBuilder.success(HttpStatus.OK, "Transaction and related data deleted successfully.", null);
 	}
 
+	@GetMapping("/transaction/{transactionId}")
+	public ResponseEntity<CommonResponseDto<Transaction>> getTransactionById(@PathVariable Long transactionId) {
+		var user = userService.getUserFromToken();
+		var transaction = transactionService.getTransactionById(user, transactionId);
+		return ResponseBuilder.success(HttpStatus.OK, "Transaction retrieved successfully.", transaction);
+	}
+
 }

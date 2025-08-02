@@ -58,20 +58,24 @@ public class NotificationService {
 
 
     public Notification updateNotification(NotificationRequestDto notificationData, long id) {
-        UserEntity user =  userService.findUserById(notificationData.getUserId());
-        Notification oldNotification = findNotificationById(id);
-         if (notificationData.getDescription() != null && !notificationData.getDescription().trim().equalsIgnoreCase("")){
-             oldNotification.setDescription(notificationData.getDescription());
-         }
-         else if (notificationData.getTitle() != null && !notificationData.getTitle().trim().equalsIgnoreCase("")){
-             oldNotification.setTitle(notificationData.getTitle());
-         }
-         else if (notificationData.getStatus() != null && !notificationData.getStatus().trim().equalsIgnoreCase("") ){
-             oldNotification.setSeen(notificationData.getStatus().equalsIgnoreCase("seen")?true:false);
-         }
-        logger.info(oldNotification +"");
-      return notificationRepository.save(oldNotification);
+    UserEntity user = userService.findUserById(notificationData.getUserId());
+    Notification oldNotification = findNotificationById(id);
+
+    if (notificationData.getDescription() != null && !notificationData.getDescription().trim().isEmpty()) {
+        logger.info("description is not null");
+        oldNotification.setDescription(notificationData.getDescription());
     }
+    if (notificationData.getTitle() != null && !notificationData.getTitle().trim().isEmpty()) {
+        logger.info("title is not null");
+        oldNotification.setTitle(notificationData.getTitle());
+    }
+    if (notificationData.getStatus() != null && !notificationData.getStatus().trim().isEmpty()) {
+        oldNotification.setSeen(notificationData.getStatus().equalsIgnoreCase("seen"));
+    }
+
+    logger.info(oldNotification + "");
+    return notificationRepository.save(oldNotification);
+}
 
     public void deleteNotification(long id) {
         Notification oldNotification = findNotificationById(id);

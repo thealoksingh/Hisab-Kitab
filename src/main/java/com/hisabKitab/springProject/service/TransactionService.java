@@ -29,6 +29,9 @@ public class TransactionService {
 	@Autowired
 	private BalanceService balanceService;
 
+	@Autowired
+	private UserService userService;
+
 	public Transaction saveTransaction(UserEntity user, Transaction transaction) throws UnAuthorizedException {
 
 		if(user.getUserId() != transaction.getFromUserId() && user.getUserId() != transaction.getToUserId()) throw new UnAuthorizedException("Transaction details is not related to authenticated user");
@@ -92,5 +95,15 @@ public class TransactionService {
 	 public List<Balance> getTransactionsByUserId(Long userId) {
 	        return (List<Balance>) balanceRepository.findByUserId(userId);
 	    }
+
+     public Transaction getTransactionById(UserEntity user, Long transactionId) {
+
+		Transaction transaction = transactionRepository.findById(transactionId).orElseThrow(() -> new EntityNotFoundException("Transaction not found with ID: " + transactionId));
+
+		if (transaction.getFromUserId() != user.getUserId() && transaction.getToUserId() != user.getUserId() && !user.getRole().equals("ADMIN")) {
+			throw new UnAuthorizedException("Transaction details is not related to authenticated user");
+		}
+		return transaction;
+	}
 
 }

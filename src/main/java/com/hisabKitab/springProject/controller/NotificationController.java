@@ -46,7 +46,7 @@ public class NotificationController {
     @DeleteMapping("/{id}")
     public ResponseEntity<CommonResponseDto<Notification>>  deleteNotification (@PathVariable long id){
          notificationService.deleteNotification(id);
-        return ResponseBuilder.success(HttpStatus.NO_CONTENT, "Notification Deleted Successfully", null);
+        return ResponseBuilder.success(HttpStatus.OK, "Notification Deleted Successfully", null);
     }
 
 }
