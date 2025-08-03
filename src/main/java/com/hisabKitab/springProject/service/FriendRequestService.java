@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import com.hisabKitab.springProject.dto.FriendRequestResponse;
 import com.hisabKitab.springProject.dto.FriendRequestStatus;
+import com.hisabKitab.springProject.dto.NotificationRequestDto;
 import com.hisabKitab.springProject.entity.FriendRequestEntity;
 import com.hisabKitab.springProject.entity.UserEntity;
 import com.hisabKitab.springProject.repository.FriendRequestRepository;
@@ -24,6 +25,10 @@ public class FriendRequestService {
 
 	@Autowired
 	private UserService userService;
+
+	@Autowired
+private NotificationService notificationService;
+
 
 	@Autowired
 	private FriendRequestEventProducer eventProducer;
@@ -75,6 +80,13 @@ public class FriendRequestService {
 		if (emailNotificationService.sendAndAcceptFriendRequestNotification(receiver.getEmail(), subjectText,
 				emailBodyMessage)) {
 
+			// Broadcast the friend request event
+			NotificationRequestDto notificationDto = new NotificationRequestDto();
+			notificationDto.setUserId(receiver.getUserId());
+			notificationDto.setTitle("New friend request");
+			notificationDto.setDescription(sender.getFullName() + " sent you a friend request");
+			notificationService.save(notificationDto);
+
 			return new FriendRequestResponse(FriendRequestStatus.REQUEST_SENT, savedRequest);
 		}
 		return new FriendRequestResponse(FriendRequestStatus.REQUEST_NOT_SENT, null);
@@ -114,6 +126,14 @@ public class FriendRequestService {
 			// Broadcast the friend request event
 			eventProducer.sendFriendRequestEvent(request);
 
+
+			// Broadcast the friend request event
+			NotificationRequestDto notificationDto = new NotificationRequestDto();
+			notificationDto.setUserId(sender.getUserId());
+			notificationDto.setTitle("Friend request accepted");
+			notificationDto.setDescription(receiver.getFullName() + " accepted your friend request");
+			notificationService.save(notificationDto);
+
 			return request;
 		}
 
@@ -128,7 +148,6 @@ public class FriendRequestService {
 		}
 		System.out.println("friend request unsend succesffully");
 
-	
 		// Broadcast the friend request event
 		if (request != null) {
 			request.setStatus("UNSENT");
@@ -142,12 +161,19 @@ public class FriendRequestService {
 		if (request != null) {
 			friendRequestRepository.deleteById(requestId);
 		}
-		System.out.println("friend request deleted succesffully");
+		System.out.println("friend request deleted succesfully");
 
 		// Broadcast the friend request event
 		if (request != null) {
 			request.setStatus("REJECTED");
 			eventProducer.sendFriendRequestEvent(request);
+
+			// Broadcast the friend request event
+			NotificationRequestDto notificationDto = new NotificationRequestDto();
+			notificationDto.setUserId(request.getSender().getUserId());
+			notificationDto.setTitle("Friend request rejected");
+			notificationDto.setDescription(request.getSender().getFullName() + " rejected your friend request");
+			notificationService.save(notificationDto);
 		}
 	}
 

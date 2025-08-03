@@ -20,6 +20,8 @@ public class NotificationRequestDto {
         this.userId = userId;
     }
 
+    public NotificationRequestDto() {
+    }
 
 
     public String getTitle() {

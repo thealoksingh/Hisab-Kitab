@@ -9,6 +9,7 @@ import org.apache.coyote.BadRequestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,13 +25,22 @@ public class NotificationService {
     @Autowired
     private UserService userService;
 
+      @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
 
     public Notification save(NotificationRequestDto notificationData) {
         Notification notification = new Notification();
         notification.setDescription(notificationData.getDescription());
         notification.setTitle(notificationData.getTitle());
         notification.setUser(userService.findUserById(notificationData.getUserId()));
-        return notificationRepository.save(notification);
+
+       Notification saved = notificationRepository.save(notification);
+
+        // Broadcast to user via WebSocket
+        messagingTemplate.convertAndSend("/topic/notifications/" + notificationData.getUserId(), saved);
+
+        return saved;
 
 
     }
@@ -74,7 +84,12 @@ public class NotificationService {
     }
 
     logger.info(oldNotification + "");
-    return notificationRepository.save(oldNotification);
+    Notification updated = notificationRepository.save(oldNotification);
+
+        // Broadcast update to user via WebSocket
+        messagingTemplate.convertAndSend("/topic/notifications/" + notificationData.getUserId(), updated);
+
+        return updated;
 }
 
     public void deleteNotification(long id) {
