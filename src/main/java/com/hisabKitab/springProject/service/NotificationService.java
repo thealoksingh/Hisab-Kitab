@@ -42,7 +42,6 @@ public class NotificationService {
 
         return saved;
 
-
     }
 
     public List<Notification> getFilteredNotification(long userId, String status) throws BadRequestException {
@@ -86,8 +85,8 @@ public class NotificationService {
     logger.info(oldNotification + "");
     Notification updated = notificationRepository.save(oldNotification);
 
-        // Broadcast update to user via WebSocket
-        messagingTemplate.convertAndSend("/topic/notifications/" + notificationData.getUserId(), updated);
+        // // Broadcast update to user via WebSocket
+        // messagingTemplate.convertAndSend("/topic/notifications/" + notificationData.getUserId(), updated);
 
         return updated;
 }
