@@ -63,6 +63,9 @@ public class UserService {
 	// Method to sign up a new user
 	public UserEntity signup(SignUpUserDto newUser) throws EntityAlreadyExistException {
 		UserEntity existingUser = userRepository.findByEmail(newUser.getEmail());
+		if(findUserByContactNo(newUser.getContactNo()) != null){
+			throw new EntityAlreadyExistException("User already exists with contact number "+ newUser.getContactNo()+ "!");
+		}
 
 		if (existingUser != null) {
 			throw new EntityAlreadyExistException("User already exists with this email!");

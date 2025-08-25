@@ -47,6 +47,7 @@ public class TransactionCommentController {
 		if (newComment != null) {
 			String topic = "transaction-comments-" + commentRequest.getTransactionId();
 			kafkaTemplate.send(topic, newComment); // Send to Kafka
+			System.out.println("comment sended by kafka");
 			return ResponseBuilder.success(HttpStatus.CREATED, "Comment saved successfully", newComment);
 		}
 

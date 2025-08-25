@@ -34,10 +34,11 @@ public class RefreshTokenService {
     
     RefreshToken refreshToken = refreshTokenRepository.findByUser_UserId(userId);
     System.out.println("refreshToken inside service = "+refreshToken);
-    if (refreshToken != null) {
-      refreshToken = verifyExpiration(refreshToken) ;
+    if (refreshToken != null && validateTokenExpiration(refreshToken)) {
+      // refreshToken = verifyExpiration(refreshToken) ;
       return refreshToken;
     }
+    //Creting new refresh token
     refreshToken = new RefreshToken();
     refreshToken.setUser(userRepository.findById(userId).get());
     refreshToken.setExpiryDate(Instant.now().plus(refreshTokenDurationDays * 1, ChronoUnit.DAYS));
@@ -50,10 +51,19 @@ public class RefreshTokenService {
   public RefreshToken verifyExpiration(RefreshToken token) {
     if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
       refreshTokenRepository.delete(token);
-      throw new TokenRefreshException(token.getToken(), "Refresh token was expired. Please make a new signin request");
+      throw new TokenRefreshException("Refresh token was expired. Please make a new signin request");
     }
 
     return token;
+  }
+
+  public boolean validateTokenExpiration(RefreshToken token) {
+    if (token.getExpiryDate().compareTo(Instant.now()) < 0) {
+      refreshTokenRepository.delete(token);
+      return false;
+    }
+
+    return true;
   }
 
   @Transactional

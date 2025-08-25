@@ -16,11 +16,11 @@ public class HisabKitabApplication {
 	public static void main(String[] args) {
 
 		// Load .env file
-        Dotenv dotenv = Dotenv.configure()
-            .directory(System.getProperty("user.dir")) // root directory
-            .ignoreIfMalformed()
-            .ignoreIfMissing()
-            .load();
+        // Dotenv dotenv = Dotenv.configure()
+        //     .directory(System.getProperty("user.dir")) // root directory
+        //     .ignoreIfMalformed()
+        //     .ignoreIfMissing()
+        //     .load();
 		SpringApplication.run(HisabKitabApplication.class, args);
 
 		logger.info("Server Started Successfully..");
