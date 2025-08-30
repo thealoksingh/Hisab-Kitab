@@ -45,20 +45,24 @@ public class JwtSecurityConfig {
     private CustomAccessDeniedHandler customAccessDeniedHandler;
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration configuration = new CorsConfiguration();
-    
-        configuration.addAllowedOriginPattern("*"); // Allow all origins dynamically (fixes "*")
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
-        configuration.setExposedHeaders(List.of("Authorization", "Content-Type")); // Allow frontend to read JWT tokens
-        configuration.setAllowCredentials(true); // Allow cookies/auth headers
-    
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
-    
-        return source;
-    }
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration configuration = new CorsConfiguration();
+
+    configuration.setAllowedOrigins(List.of(
+        "https://hisab-kitab-business.netlify.app", // production frontend
+        "http://localhost:3000",                    // React dev server
+        "http://127.0.0.1:3000"                     // in case you use 127.0.0.1 instead of localhost
+    ));
+    configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    configuration.setAllowedHeaders(List.of("*"));
+    configuration.setExposedHeaders(List.of("Authorization", "Content-Type"));
+    configuration.setAllowCredentials(true);
+
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", configuration);
+
+    return source;
+}
     
 
     @Bean
