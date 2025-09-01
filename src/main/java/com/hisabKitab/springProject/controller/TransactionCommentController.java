@@ -2,6 +2,8 @@ package com.hisabKitab.springProject.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hisabKitab.springProject.HisabKitabApplication;
 import com.hisabKitab.springProject.dto.CommentRequestDto;
 import com.hisabKitab.springProject.dto.CommentResponseDto;
 import com.hisabKitab.springProject.dto.CommonResponseDto;
@@ -38,6 +41,8 @@ public class TransactionCommentController {
 	@Autowired
 	private KafkaTemplate<String, CommentResponseDto> kafkaTemplate;
 
+	private static final Logger logger = LoggerFactory.getLogger(HisabKitabApplication.class);
+
 	@PostMapping("/transaction/comment/save")
 	public ResponseEntity<CommonResponseDto<CommentResponseDto>> saveComment(
 			@RequestBody CommentRequestDto commentRequest) {
@@ -46,6 +51,7 @@ public class TransactionCommentController {
 
 		if (newComment != null) {
 			String topic = "transaction-comments-" + commentRequest.getTransactionId();
+			logger.info("Executing kafka from trnsaction comment controller");
 			kafkaTemplate.send(topic, newComment); // Send to Kafka
 			System.out.println("comment sended by kafka");
 			return ResponseBuilder.success(HttpStatus.CREATED, "Comment saved successfully", newComment);

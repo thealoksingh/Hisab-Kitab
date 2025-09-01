@@ -80,7 +80,7 @@ public CorsConfigurationSource corsConfigurationSource() {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/Hisab-Kitab/ws/**","/admin/**", "/api/ping", "/user/login", "/user/signup", "/user/refresh-token",
                                 "/user/update-password", "/user/sendOTP", "/actuator",
-                                "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/ws/**")
+                                "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/ws/**", "/config/**")
                         .permitAll() // Public endpoints
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Allow OPTIONS for CORS preflight
                         .anyRequest().authenticated()) // All other requests need to be authenticated
