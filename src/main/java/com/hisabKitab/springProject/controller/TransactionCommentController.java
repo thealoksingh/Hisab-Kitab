@@ -26,6 +26,11 @@ import com.hisabKitab.springProject.service.CommentService;
 import com.hisabKitab.springProject.service.UserService;
 import com.hisabKitab.springProject.utils.ResponseBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
+import java.util.concurrent.CompletableFuture;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
+import java.util.Collections;
+import java.time.Duration;
 
 @RestController
 @RequestMapping("/user")
@@ -40,6 +45,9 @@ public class TransactionCommentController {
 
 	@Autowired
 	private KafkaTemplate<String, CommentResponseDto> kafkaTemplate;
+	
+	@Autowired
+	private AdminClient adminClient;
 
 	private static final Logger logger = LoggerFactory.getLogger(HisabKitabApplication.class);
 
@@ -50,10 +58,19 @@ public class TransactionCommentController {
 		var newComment = commentService.saveComment(user, commentRequest);
 
 		if (newComment != null) {
-			String topic = "transaction-comments-" + commentRequest.getTransactionId();
-			logger.info("Executing kafka from trnsaction comment controller");
-			kafkaTemplate.send(topic, newComment); // Send to Kafka
-			System.out.println("comment sended by kafka");
+			// Send to Kafka asynchronously using existing topic with transaction ID as key
+			CompletableFuture.runAsync(() -> {
+				try {
+					String topic = "transaction-comments";
+					String key = "trans-" + commentRequest.getTransactionId();
+					logger.info("Sending to Kafka topic: {} with key: {}", topic, key);
+					
+					kafkaTemplate.send(topic, key, newComment);
+					logger.info("Comment sent successfully to Kafka");
+				} catch (Exception e) {
+					logger.error("Kafka send failed: {}", e.getMessage());
+				}
+			});
 			return ResponseBuilder.success(HttpStatus.CREATED, "Comment saved successfully", newComment);
 		}
 

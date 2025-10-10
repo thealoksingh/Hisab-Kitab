@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.hisabKitab.springProject.dto.CommentResponseDto;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import com.hisabKitab.springProject.entity.FriendRequestEntity;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;

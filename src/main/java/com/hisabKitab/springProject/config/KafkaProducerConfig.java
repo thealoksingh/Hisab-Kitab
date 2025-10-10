@@ -15,6 +15,7 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import com.hisabKitab.springProject.dto.CommentResponseDto;
 import com.hisabKitab.springProject.entity.FriendRequestEntity;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 @Configuration
 public class KafkaProducerConfig {
