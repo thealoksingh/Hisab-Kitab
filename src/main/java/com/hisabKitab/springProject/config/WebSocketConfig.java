@@ -12,15 +12,26 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        config.enableSimpleBroker("/topic"); // broker prefix
-        config.setApplicationDestinationPrefixes("/app"); // client send prefix
+        config.enableSimpleBroker("/topic");
+        config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        registry.addEndpoint("/ws") // WebSocket endpoint
-            .setAllowedOriginPatterns("*") // Use this instead of setAllowedOrigins("*")
-                .withSockJS(); // fallback support
+        registry.addEndpoint("/ws")
+            .setAllowedOrigins(
+                "https://hisab-kitab-business.netlify.app",
+                "http://localhost:3000",
+                "http://127.0.0.1:3000"
+            )
+            .withSockJS();
+        
+        // Add endpoint without SockJS for native WebSocket support
+        registry.addEndpoint("/ws")
+            .setAllowedOrigins(
+                "https://hisab-kitab-business.netlify.app",
+                "http://localhost:3000",
+                "http://127.0.0.1:3000"
+            );
     }
-    
 }

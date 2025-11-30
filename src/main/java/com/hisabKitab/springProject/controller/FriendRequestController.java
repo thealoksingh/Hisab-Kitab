@@ -2,9 +2,12 @@ package com.hisabKitab.springProject.controller;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +36,11 @@ public class FriendRequestController {
     @Autowired
     private UserService userService;
     
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+    
+    private static final Logger logger = LoggerFactory.getLogger(FriendRequestController.class);
+    
 
     @PostMapping("/send")
     public ResponseEntity<CommonResponseDto<FriendRequestResponse>> sendRequest( @RequestParam String recieverContactNo) {
@@ -55,6 +63,14 @@ public class FriendRequestController {
             case REQUEST_ALREADY_SENT:
                 return ResponseBuilder.failure(HttpStatus.BAD_REQUEST,"Friend request already sent.");
             case REQUEST_SENT:
+                // Send WebSocket notification to receiver
+                try {
+                    String destination = "/topic/friend-requests/" + reciever.getUserId();
+                    messagingTemplate.convertAndSend(destination, response);
+                    logger.info("Friend request sent via WebSocket to: {}", destination);
+                } catch (Exception e) {
+                    logger.error("WebSocket send failed: {}", e.getMessage(), e);
+                }
                 return ResponseBuilder.success(HttpStatus.OK,"Friend request sent successfully!", response);
             default:
                 return ResponseBuilder.failure(HttpStatus.INTERNAL_SERVER_ERROR,"An unexpected error occurred.");
@@ -69,6 +85,16 @@ public class FriendRequestController {
     	if(request==null) {
     		return ResponseBuilder.failure(HttpStatus.BAD_REQUEST,"Request not exist");
     	}
+    	
+    	// Send WebSocket notification to sender
+    	try {
+    		String destination = "/topic/friend-requests/" + request.getSender().getUserId();
+    		messagingTemplate.convertAndSend(destination, request);
+    		logger.info("Friend request acceptance sent via WebSocket to: {}", destination);
+    	} catch (Exception e) {
+    		logger.error("WebSocket send failed: {}", e.getMessage(), e);
+    	}
+    	
         return ResponseBuilder.success(HttpStatus.OK,"Friend request accepted", request);
     }
 

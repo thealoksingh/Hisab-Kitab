@@ -10,11 +10,12 @@ COPY src ./src
 
 # Install Maven and build the project
 RUN apt-get update && apt-get install -y maven \
-    && mvn clean package -DskipTests \
+    && mvn dependency:purge-local-repository -DactTransitively=false -DreResolve=false \
+    && mvn clean package -DskipTests -U \
     && mv target/*.jar app.jar
 
 # Expose the application port
 EXPOSE 8080
 
-# Command to run the application
-CMD ["java", "-jar", "app.jar"]
+# Command to run the application with production profile
+CMD ["java", "-jar", "-Dspring.profiles.active=prod", "app.jar"]

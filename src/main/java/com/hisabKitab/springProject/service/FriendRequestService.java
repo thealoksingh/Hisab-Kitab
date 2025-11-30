@@ -31,7 +31,7 @@ private NotificationService notificationService;
 
 
 	@Autowired
-	private FriendRequestEventProducer eventProducer;
+	private FriendRequestNotificationService friendRequestNotificationService;
 
 	public FriendRequestResponse sendRequest(UserEntity sender, UserEntity receiver) {
 
@@ -57,8 +57,8 @@ private NotificationService notificationService;
 
 		FriendRequestEntity savedRequest = friendRequestRepository.save(friendRequest);
 
-		// Broadcast the friend request event
-		eventProducer.sendFriendRequestEvent(savedRequest);
+		// Send real-time notification via WebSocket
+		friendRequestNotificationService.sendFriendRequestNotification(savedRequest);
 
 		// Send email notification
 		String subjectText = sender.getFullName() + " has sent you a friend request.";
@@ -123,8 +123,8 @@ private NotificationService notificationService;
 			deleteRequest(userId, requestId);
 
 			// Notify the sender about the acceptance
-			// Broadcast the friend request event
-			eventProducer.sendFriendRequestEvent(request);
+			// Send real-time notification via WebSocket
+			friendRequestNotificationService.sendFriendRequestNotification(request);
 
 
 			// Broadcast the friend request event
@@ -148,10 +148,10 @@ private NotificationService notificationService;
 		}
 		System.out.println("friend request unsend succesffully");
 
-		// Broadcast the friend request event
+		// Send real-time notification via WebSocket
 		if (request != null) {
 			request.setStatus("UNSENT");
-			eventProducer.sendFriendRequestEvent(request);
+			friendRequestNotificationService.sendFriendRequestNotification(request);
 		}
 	}
 
@@ -163,10 +163,10 @@ private NotificationService notificationService;
 		}
 		System.out.println("friend request deleted succesfully");
 
-		// Broadcast the friend request event
+		// Send real-time notification via WebSocket
 		if (request != null) {
 			request.setStatus("REJECTED");
-			eventProducer.sendFriendRequestEvent(request);
+			friendRequestNotificationService.sendFriendRequestNotification(request);
 
 			// Broadcast the friend request event
 			NotificationRequestDto notificationDto = new NotificationRequestDto();
